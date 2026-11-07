@@ -1069,17 +1069,12 @@
       "title": "Switch benchbox-site to tractable"
     },
     "tractable-p6-bossmode": {
-      "claim": {
-        "expires_at": "2026-11-08T16:30:35Z",
-        "generation": "02b4f43d43d046289455786b604df9a3",
-        "renewals": 0,
-        "worker": "joe-tractable-rename"
-      },
+      "claim": null,
       "needs": [
         "global-index-install-and-upgrade"
       ],
       "priority": "medium",
-      "status": "active",
+      "status": "done",
       "title": "Switch bossmode to tractable"
     },
     "tractable-p6-oxbow": {
