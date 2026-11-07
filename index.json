@@ -269,18 +269,13 @@
       "title": "Isolate store init from global hooks on Git versions below 2.31"
     },
     "global-index-install-and-upgrade": {
-      "claim": {
-        "expires_at": "2026-11-08T16:25:09Z",
-        "generation": "41034202a7f54fbcb49c57ef7e1f646c",
-        "renewals": 0,
-        "worker": "joe-tractable-rename"
-      },
+      "claim": null,
       "needs": [
         "tractable-p3-release-1-0-0",
         "tractable-p4-skill-catalog"
       ],
       "priority": "high",
-      "status": "active",
+      "status": "done",
       "title": "Switch this machine to tractable from PyPI"
     },
     "global-install-and-skill-behind-0-11-0": {
