@@ -1087,12 +1087,17 @@
       "title": "Switch Oxbow to tractable"
     },
     "tractable-p6-skill-sync": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-08T16:30:41Z",
+        "generation": "d6030ef3345d44ffaf705d30290a72a8",
+        "renewals": 0,
+        "worker": "joe-tractable-rename"
+      },
       "needs": [
         "global-index-install-and-upgrade"
       ],
       "priority": "medium",
-      "status": "open",
+      "status": "active",
       "title": "Switch skill-sync to tractable"
     },
     "tractable-p7-decommission-todo-db": {
