@@ -1060,12 +1060,17 @@
       "title": "Switch BenchBox to the vendored tractable 1.0.0 runtime"
     },
     "tractable-p6-benchbox-site": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-08T16:30:22Z",
+        "generation": "cb2214635b4c4c359a15fa9abc23c7d5",
+        "renewals": 0,
+        "worker": "joe-tractable-rename"
+      },
       "needs": [
         "global-index-install-and-upgrade"
       ],
       "priority": "medium-high",
-      "status": "open",
+      "status": "active",
       "title": "Switch benchbox-site to tractable"
     },
     "tractable-p6-bossmode": {
