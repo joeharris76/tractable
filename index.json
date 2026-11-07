@@ -1050,13 +1050,18 @@
       "title": "Update the todo skill and review protocol in skill-sync-skills for tractable"
     },
     "tractable-p6-benchbox": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-08T16:28:46Z",
+        "generation": "9a5cb696bd994f4b8e926bfc3620830c",
+        "renewals": 0,
+        "worker": "joe-tractable-rename"
+      },
       "needs": [
         "tractable-p3-release-1-0-0",
         "tractable-p4-skill-catalog"
       ],
       "priority": "high",
-      "status": "open",
+      "status": "active",
       "title": "Switch BenchBox to the vendored tractable 1.0.0 runtime"
     },
     "tractable-p6-benchbox-site": {
