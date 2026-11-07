@@ -3,7 +3,7 @@
     "Merged with the repository's required checks.",
     "A fresh session starts tractable-mcp and reports the skill-sync bound store."
   ],
-  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.",
+  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.\n\n2026-11-07: https://github.com/joeharris76/skill-sync/pull/37 merged as fcb3ae6 (merge commit, the repository style) with shellcheck and tests on macOS and Ubuntu green. The bossmode skill stays pinned at its earlier catalog revision because catalog cc8adf5 no longer contains skills/bossmode. Fresh clone of main at fcb3ae6: the .mcp.json server (tractable-mcp) reports tractable 1.0.0, bound to joeharris76/skill-sync. Local checkout ~/Developer/skill-sync fast-forwarded (its uncommitted MIGRATION.md change kept); an ignored .todo-db/archive/ remains there.",
   "description": "Phase 6. One PR in joeharris76/skill-sync (not skill-sync-skills): move .todo-db to .tractable, and update any MCP registration, enabled server list and skill mirrors, following the repository's own process.",
   "sessions": [
     {
@@ -22,6 +22,14 @@
       "op": "take",
       "op_id": "ed41abc369d340b79bf916bf10d0a7dd",
       "session_id": "d75f6392f62b438ca1f11ea37bb2fab6"
+    },
+    {
+      "actor": "joe-tractable-rename",
+      "at": "2026-11-07T16:30:44Z",
+      "client": "mcp",
+      "op": "update",
+      "op_id": "d6dc53c9316141e3ba19904e96a1f932",
+      "session_id": "d5349ebdedcc4f7d92d5a63ed5752b53"
     }
   ]
 }
