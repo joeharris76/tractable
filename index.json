@@ -783,17 +783,12 @@
       "title": "Publish and verify todo-db 0.14.0 on PyPI"
     },
     "pypi-trusted-publisher-configuration": {
-      "claim": {
-        "expires_at": "2026-11-08T16:24:31Z",
-        "generation": "79b8d50467a84b329a633a40063a2666",
-        "renewals": 0,
-        "worker": "joe-tractable-rename"
-      },
+      "claim": null,
       "needs": [
         "tractable-p1-github-repo-rename"
       ],
       "priority": "high",
-      "status": "active",
+      "status": "done",
       "title": "Register the PyPI trusted publisher for tractable"
     },
     "release-0-4-3-and-downstream-upgrade": {
