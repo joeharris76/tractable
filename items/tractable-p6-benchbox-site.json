@@ -3,7 +3,7 @@
     "ci green and merged.",
     "A fresh session in the repo starts tractable-mcp and its get_instructions bound store names BenchBox-dev/benchbox-site."
   ],
-  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.",
+  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.\n\n2026-11-07: https://github.com/BenchBox-dev/benchbox-site/pull/120 squash-merged as d2a9ec0 with all checks green (ci, core bundle, bundle schema 4 and 5, site and explorer browser suites). Fresh clone of main at d2a9ec0: the .mcp.json server (tractable-mcp) reports tractable 1.0.0 and get_instructions(expect_store=\"BenchBox-dev/benchbox-site\") returns the bound store (remote https://github.com/BenchBox-dev/benchbox-site.git). The owner checkout ~/Developer/benchbox-site is on another branch with uncommitted work and was not touched; it picks up the change on its next update of main.",
   "description": "Phase 6. One PR: move .todo-db to .tractable, set .mcp.json to server tractable / command tractable-mcp, update enabled server lists, and change AGENTS.md to \"tractable 1.0.0 or later\" with expect_store unchanged (BenchBox-dev/benchbox-site). Bump the skill pin and mirrors if the repo pins the todo skill. Squash-merge when ci is green.",
   "sessions": [
     {
@@ -22,6 +22,14 @@
       "op": "take",
       "op_id": "89d3efdb7ac64e569efe11065e679dfd",
       "session_id": "8c0d42e7afa74555bfb8013592391478"
+    },
+    {
+      "actor": "joe-tractable-rename",
+      "at": "2026-11-07T16:30:24Z",
+      "client": "mcp",
+      "op": "update",
+      "op_id": "de2f8b251f0e46f988d5d312b1ff8546",
+      "session_id": "ef298a52277c498e8dbff3c82712e925"
     }
   ]
 }
