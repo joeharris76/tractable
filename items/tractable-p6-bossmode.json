@@ -3,7 +3,7 @@
     "Merged with the repository's required checks.",
     "A fresh session starts tractable-mcp and reports the bossmode bound store."
   ],
-  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.",
+  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.\n\n2026-11-07: https://github.com/joeharris76/bossmode/pull/37 squash-merged as 4bfbfb9 (.gitignore and AGENTS.md now name .tractable/). The repository has no required checks. Local checkout ~/Developer/bossmode fast-forwarded to 4bfbfb9 and its ignored local .todo-db/ (config.json, archive/) moved to .tractable/ (still ignored). bossmode has no .mcp.json; tractable-mcp started with no arguments in the checkout (as the global Codex and Gemini registrations run it) reports tractable 1.0.0, bound to joeharris76/bossmode.",
   "description": "Phase 6. One PR in joeharris76/bossmode: move .todo-db to .tractable, and update any MCP registration, enabled server list and skill mirrors, following the repository's own process.",
   "sessions": [
     {
@@ -22,6 +22,14 @@
       "op": "take",
       "op_id": "9b3ecff5589f4431ac0c0f2d24198543",
       "session_id": "eca154ed383547de8fbd9d86679c66c1"
+    },
+    {
+      "actor": "joe-tractable-rename",
+      "at": "2026-11-07T16:30:37Z",
+      "client": "mcp",
+      "op": "update",
+      "op_id": "cdfde0c552da4c59bcb6bd168103a55c",
+      "session_id": "a1a1c1e3cc2a4b54bf32756341c9c0ea"
     }
   ]
 }
