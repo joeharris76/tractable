@@ -1031,18 +1031,13 @@
       "title": "Rename the code, configuration and docs to tractable 1.0.0"
     },
     "tractable-p3-release-1-0-0": {
-      "claim": {
-        "expires_at": "2026-11-08T16:24:43Z",
-        "generation": "0b22988ffc9a4ce0b56c11970c6592c2",
-        "renewals": 0,
-        "worker": "joe-tractable-rename"
-      },
+      "claim": null,
       "needs": [
         "tractable-p2-code-rename",
         "pypi-trusted-publisher-configuration"
       ],
       "priority": "high",
-      "status": "active",
+      "status": "done",
       "title": "Release tractable 1.0.0 to GitHub and PyPI"
     },
     "tractable-p4-skill-catalog": {
