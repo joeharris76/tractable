@@ -1078,17 +1078,12 @@
       "title": "Switch bossmode to tractable"
     },
     "tractable-p6-oxbow": {
-      "claim": {
-        "expires_at": "2026-11-08T16:30:29Z",
-        "generation": "53633ebcb7c54f4d9ded7274ead96d65",
-        "renewals": 0,
-        "worker": "joe-tractable-rename"
-      },
+      "claim": null,
       "needs": [
         "global-index-install-and-upgrade"
       ],
       "priority": "medium",
-      "status": "active",
+      "status": "done",
       "title": "Switch Oxbow to tractable"
     },
     "tractable-p6-skill-sync": {
