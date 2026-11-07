@@ -3,7 +3,7 @@
     "Merged with the repository's required checks.",
     "A fresh session starts tractable-mcp and reports the Oxbow bound store."
   ],
-  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.",
+  "context": "Guardrails (ADR 0013): no state-schema change, data migration, or trailer change; the 1.0.0 release is the rename only; each project switches runtime, config dir, MCP registration, skill mirrors and scripts in one change; the old todo-db tool stays installed until decommission; never create a repository named joeharris76/todo-db; historical records (CHANGELOG entries, earlier ADRs, consumer evidence, exports) are not rewritten.\n\n2026-11-07: https://github.com/joeharris76/Oxbow/pull/14 squash-merged as 2e609ff. The repository has no required checks (private, no branch protection) and no CI workflow ran. Fresh clone of main at 2e609ff: the .mcp.json server (tractable-mcp) reports tractable 1.0.0, bound to joeharris76/Oxbow (expect_store matched). The owner checkout ~/Developer/Oxbow is on branch chore/tracker-json-git-runtime with uncommitted work and was not touched.",
   "description": "Phase 6. One PR in joeharris76/Oxbow: move .todo-db to .tractable, set .mcp.json to tractable-mcp, update enabled server lists and any skill mirrors or pins, following the repository's own process.",
   "sessions": [
     {
@@ -22,6 +22,14 @@
       "op": "take",
       "op_id": "d516fe5ab327412a9a2eb5a04ab3444d",
       "session_id": "97d537d63d3e4ced90c10f7003840c7b"
+    },
+    {
+      "actor": "joe-tractable-rename",
+      "at": "2026-11-07T16:30:31Z",
+      "client": "mcp",
+      "op": "update",
+      "op_id": "5285e4370708486898706bde7a9d2e21",
+      "session_id": "0a412ec22eae4b9ca147e2b6765ba854"
     }
   ]
 }
