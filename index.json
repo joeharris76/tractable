@@ -788,7 +788,7 @@
         "tractable-p1-github-repo-rename"
       ],
       "priority": "high",
-      "status": "blocked",
+      "status": "open",
       "title": "Register the PyPI trusted publisher for tractable"
     },
     "release-0-4-3-and-downstream-upgrade": {

@@ -61,6 +61,14 @@
       "op": "update",
       "op_id": "402acf3d4d3d44f9877a00fd4f601ab3",
       "session_id": "feb608d2aaa94861abc6698a61a687c1"
+    },
+    {
+      "actor": "joe-tractable-rename",
+      "at": "2026-11-07T16:24:30Z",
+      "client": "mcp",
+      "op": "update",
+      "op_id": "7909bae7074c4b4c8b7734738e1470f2",
+      "session_id": "38afc4bdb10b4cfa99e9441c6864c226"
     }
   ]
 }
