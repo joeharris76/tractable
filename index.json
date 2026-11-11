@@ -439,7 +439,7 @@
         "mcp-remove-agent-cli-surface"
       ],
       "priority": "high",
-      "status": "open",
+      "status": "dropped",
       "title": "Reshape the floor CLI and rewrite the release gates"
     },
     "mcp-connection-model": {

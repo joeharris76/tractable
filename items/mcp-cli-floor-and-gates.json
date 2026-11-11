@@ -1,5 +1,6 @@
 {
   "description": "Add todo-db verify-run <id> --claim-token <t> --actor <p> that previews and runs the ladder, re-checks scope, and attests only (it does not complete the item; finish stays the closer). Add todo-db rebaseline with --actor. Delete _project/scripts/todo, DEFAULT_WRAPPER_RELATIVE, refresh-wrapper, and init-project --wrapper; strip wrapper-key handling from doctor and init-project and ship a one-line config migration note. Rewrite docs/operations/release-gates.md Gate 2 against a surviving floor verb, not the deleted todo list/ready/show and not the uncertified hosted path.",
+  "drop_reason": "Obsolete: delivered or superseded by 0.6.0 and later releases. 0.6.0 removed _project/scripts/todo, DEFAULT_WRAPPER_RELATIVE, refresh-wrapper and init-project --wrapper, added the verify-run and rebaseline floor verbs, and rewrote release gate 2 against surviving floor verbs. The JSON/Git store then replaced that floor CLI and its verification ladder; docs/operations/release-gates.md now runs gate 2 with tractable validate/list/recover, as used for the 1.0.0 and 1.1.0 releases.",
   "legacy": {
     "item_deps": [
       {
@@ -158,5 +159,15 @@
         "wid": "w3"
       }
     ]
-  }
+  },
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:a74479cef91e2660eb58f0be",
+      "at": "2026-11-11T17:07:59Z",
+      "client": "omp-coding-agent",
+      "op": "drop",
+      "op_id": "712566fe59874711a8fef486615fa163",
+      "session_id": "870d34225b9449a7a729c5c82d8ad96d"
+    }
+  ]
 }
