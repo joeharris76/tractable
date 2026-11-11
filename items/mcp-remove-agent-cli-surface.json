@@ -1,5 +1,6 @@
 {
   "description": "Remove from cli.py: the entire agent subcommand group, _run_agent, _agent_instructions, the AGENT_* constants, the finding subcommand group except sync, and the subcommands that are now MCP-only (create, update, list, show, ready, stats, deps, start, done, defer, promote, dismiss, block, unblock, release, claim, check-scope, verify, lint). Drop next_action.command. Delete tests/test_cli_agent.py and port its assertions to the MCP suite.",
+  "drop_reason": "Obsolete: the work shipped in 0.6.0 (2026-09-02, tag v0.6.0) outside this item. CHANGELOG 0.6.0 'Removed' lists the agent CLI group, AGENT_* constants, the MCP-only subcommands and the finding subcommands except sync; next_action dropped command; tests/test_cli_agent.py no longer exists. The 1.1.0 floor CLI has only bootstrap, validate, migrate, recover, list, show, batch show and cache. Dropped rather than finished because no claim tracked the delivery.",
   "legacy": {
     "item_deps": [
       {
@@ -143,5 +144,15 @@
         "wid": "w3"
       }
     ]
-  }
+  },
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:a74479cef91e2660eb58f0be",
+      "at": "2026-11-11T17:07:57Z",
+      "client": "omp-coding-agent",
+      "op": "drop",
+      "op_id": "5836888ca08740cebbcb165a2d14220d",
+      "session_id": "870d34225b9449a7a729c5c82d8ad96d"
+    }
+  ]
 }

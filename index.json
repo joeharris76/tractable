@@ -510,7 +510,7 @@
         "mcp-target-adoption-proof"
       ],
       "priority": "high",
-      "status": "open",
+      "status": "dropped",
       "title": "Remove the agent CLI group and the MCP-only subcommands"
     },
     "mcp-remove-pi-adapter": {
