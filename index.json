@@ -1096,7 +1096,12 @@
       "title": "Switch skill-sync to tractable"
     },
     "tractable-p7-decommission-todo-db": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-12T12:36:13Z",
+        "generation": "69cae7662d83487b8842617a88d43b52",
+        "renewals": 0,
+        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:81d4fe7d261e522b1885d704"
+      },
       "needs": [
         "tractable-p6-benchbox",
         "tractable-p6-benchbox-site",
@@ -1105,7 +1110,7 @@
         "tractable-p6-skill-sync"
       ],
       "priority": "medium",
-      "status": "open",
+      "status": "active",
       "title": "Remove the todo-db tool and its leftovers"
     },
     "tractable-rename-adr": {
