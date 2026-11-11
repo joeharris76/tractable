@@ -1109,15 +1109,10 @@
       "title": "Remove the todo-db tool and its leftovers"
     },
     "tractable-release-1-1-0": {
-      "claim": {
-        "expires_at": "2026-11-12T17:04:44Z",
-        "generation": "8bee9ebb7ca14edbad70f93e19cc5a4e",
-        "renewals": 0,
-        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:a74479cef91e2660eb58f0be"
-      },
+      "claim": null,
       "needs": [],
       "priority": "high",
-      "status": "active",
+      "status": "done",
       "title": "Release tractable 1.1.0 to GitHub and PyPI"
     },
     "tractable-rename-adr": {
