@@ -1108,6 +1108,13 @@
       "status": "done",
       "title": "Remove the todo-db tool and its leftovers"
     },
+    "tractable-release-1-1-0": {
+      "claim": null,
+      "needs": [],
+      "priority": "high",
+      "status": "open",
+      "title": "Release tractable 1.1.0 to GitHub and PyPI"
+    },
     "tractable-rename-adr": {
       "claim": null,
       "needs": [],

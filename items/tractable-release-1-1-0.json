@@ -1,0 +1,19 @@
+{
+  "acceptance": [
+    "Gate 1 (scratch lifecycle through the MCP server, including the per-batch claim slot) and gate 2 (tractable validate against BenchBox's todo-state) pass on the candidate before the tag; evidence in the #72 body.",
+    "Tag v1.1.0 on main; tag-push run publishes the GitHub release whose assets match the candidate.",
+    "Opt-in PyPI run green including distribution-verify; run URL and SHA-256 values recorded here.",
+    "Global tool at 1.1.0 from PyPI; BenchBox PR vendoring tractable 1.1.0 merged with required checks."
+  ],
+  "description": "main carries the 1.1.0 version bump and dated changelog (#71 fixes, #72 bump) but v1.1.0 is not tagged or published. Run release gates 1 and 2 on the candidate built from main, record them in the #72 body, tag v1.1.0, let the tag push publish the GitHub release, then the opt-in PyPI dispatch (owner approves the pypi environment). Then upgrade the global tool and move BenchBox's vendored runtime to 1.1.0.",
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:a74479cef91e2660eb58f0be",
+      "at": "2026-11-11T17:04:37Z",
+      "client": "omp-coding-agent",
+      "op": "create",
+      "op_id": "2f23301050f74e049ed635c8e2108cdb",
+      "session_id": "870d34225b9449a7a729c5c82d8ad96d"
+    }
+  ]
+}
