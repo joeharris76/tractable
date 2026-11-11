@@ -414,7 +414,7 @@
         "mcp-remove-pi-adapter"
       ],
       "priority": "medium-high",
-      "status": "open",
+      "status": "dropped",
       "title": "Cut the 0.6.0 breaking release"
     },
     "mcp-benchbox-parity-coordination": {
