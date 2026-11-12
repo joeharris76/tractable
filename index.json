@@ -224,6 +224,13 @@
       "status": "done",
       "title": "Cutover + rollback rehearsal against post-findings production shape"
     },
+    "distribution-verify-waits-for-index-listing": {
+      "claim": null,
+      "needs": [],
+      "priority": "medium",
+      "status": "open",
+      "title": "Let distribution-verify wait for PyPI to list a just-uploaded version"
+    },
     "drop-reason-text-cap-and-secret-scan": {
       "claim": null,
       "needs": [

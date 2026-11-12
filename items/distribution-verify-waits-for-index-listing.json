@@ -1,0 +1,18 @@
+{
+  "acceptance": [
+    "A test with a fake index that lists the version only after N polls shows the install runs after it appears; a fake index that never lists it fails with a message naming the version and the wait.",
+    "No check is weakened: hash verification, both --version outputs and the MCP initialize/tools-list still gate success.",
+    "docs/operations/release-gates.md says the verify step waits for the index listing and for how long."
+  ],
+  "description": "Defect. `distribution-verify` installs `tractable[mcp]==$VERSION` from https://pypi.org/simple seconds after `pypi-publish` finishes. PyPI's simple index can lag the upload by a minute or two, so the install fails with \"there is no version of tractable[mcp]==1.1.1\" even though the upload succeeded and the byte check in the same job already verified both files from PyPI's JSON API. Observed on the 1.1.1 opt-in run https://github.com/joeharris76/tractable/actions/runs/43133361734: attempts 1 (12:53 UTC) and 2 (12:54 UTC) failed this way; the same `uv --no-config --no-cache pip install` failed locally at 12:54 and succeeded about two minutes later; attempt 3 passed unchanged. The run is marked failed and someone has to rerun the job by hand, and a reader of the failure can mistake it for a broken release. Fix in scripts/verify_index_release.py: before the fresh install, poll the simple index (same request uv makes) until it lists the version, with a bounded wait of about 10 minutes, then install once; keep every byte, version and MCP check unchanged and fail with a clear message if the version never appears.",
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:55230d241771abb0a545d2ed",
+      "at": "2026-11-12T16:53:30Z",
+      "client": "omp-coding-agent",
+      "op": "create",
+      "op_id": "c75c300ac2294e508559add46fc433de",
+      "session_id": "0321b487455a41afbedc7aef84edb48e"
+    }
+  ]
+}
