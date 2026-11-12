@@ -1,0 +1,17 @@
+{
+  "acceptance": [
+    "For each client listed, mcp-clients.md states which registration runs when a user-level and a project-level server share the name `tractable`, based on an observed run.",
+    "The doc gives one recommended setup for projects that pin a runtime, and how to confirm which version a session is running."
+  ],
+  "description": "Gap found during the rename rollout. BenchBox registers a project server named `tractable` in .mcp.json that runs its pinned runtime (`uv run --project _project/scripts --locked -- tractable-mcp`). This machine also registers a user-level server named `tractable` that runs the global `tractable-mcp` (~/.codex/config.toml, ~/.gemini/settings.json, ~/.config/opencode/opencode.jsonc). omp documents that Codex and Gemini imports take precedence over a root .mcp.json for the same server name (omp mcp-config docs, about lines 483-497), yet on 2026-11-09 a session started in the BenchBox primary clone ran the project server (pid 40847), not the global one. The rule a client actually applies decides whether a project gets its pinned runtime or whatever version is installed globally; with differing versions (1.0.0 global vs 1.1.0 pinned on 2026-11-11) that can change claim behaviour mid-project. docs/operations/mcp-clients.md says nothing about this. Investigate the precedence per client (omp, Claude Code, Codex, Gemini, opencode) with both registrations present, and document it with a recommendation: for example a distinct name for the global registration, or relying on expect_store plus a version check.",
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:55230d241771abb0a545d2ed",
+      "at": "2026-11-12T16:53:40Z",
+      "client": "omp-coding-agent",
+      "op": "create",
+      "op_id": "204c3bfd27b24666a5697c0458aefdc6",
+      "session_id": "0321b487455a41afbedc7aef84edb48e"
+    }
+  ]
+}

@@ -510,6 +510,13 @@
       "status": "done",
       "title": "Machine-readable next_action with dual-emitted command string"
     },
+    "mcp-registration-name-collision": {
+      "claim": null,
+      "needs": [],
+      "priority": "low",
+      "status": "open",
+      "title": "Document which tractable server wins when global and project registrations share a name"
+    },
     "mcp-remove-agent-cli-surface": {
       "claim": null,
       "needs": [
