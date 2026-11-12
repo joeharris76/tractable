@@ -1,0 +1,18 @@
+{
+  "acceptance": [
+    "scripts/release_gate1.py passes against a candidate built from main and fails (non-zero, failing check named) when pointed at a build with a deliberately broken check, for example an older version string.",
+    "release-gates.md gate 1 names the script and its final line as the evidence to record.",
+    "A CI job or test runs the harness against the current tree so it cannot drift from the tool surface."
+  ],
+  "description": "Gap. docs/operations/release-gates.md describes gate 1 (scratch bootstrap, create, take, renew, finish, a conflicting write, an offline read, driven through the MCP server) but the repository has no script for it, so each release rebuilds it by hand and coverage varies. 1.0.0 used an ad-hoc /tmp/joe-gate/gate1.py (21 checks); 1.1.0 rewrote it (24 checks, adding the per-batch claim slot); 1.1.1 ran a shorter manual sequence recorded in the PR #74 body. The scripts were deleted afterwards, so the evidence cannot be rerun or reviewed. Add scripts/release_gate1.py taking the candidate's bin directory and expected version, using a scratch bare remote and isolated caches, unsetting inherited TRACTABLE_* variables, and printing one PASS/FAIL line per check plus a final `Gate 1: N/N checks passed`. Cover at least: both --version outputs; bootstrap and validate; serverInfo and the tractable_batch capability; bound store and an expect_store mismatch refused (including a prefix sibling such as repo vs repo-site); create, take, renew, a second take refused, a second worker refused the live claim and writing on top, two concurrent writers both publishing, finish, drop with a reason, list reflecting all writers; register_batch and the per-batch claim slot; update_item clear_not_before; offline read served stale and offline write refused with E_OFFLINE; final validate counts; state commits authored by tractable with todo(op) subjects.",
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:55230d241771abb0a545d2ed",
+      "at": "2026-11-12T16:53:37Z",
+      "client": "omp-coding-agent",
+      "op": "create",
+      "op_id": "7940d0948a30430a86ccff1c8720d5c9",
+      "session_id": "0321b487455a41afbedc7aef84edb48e"
+    }
+  ]
+}

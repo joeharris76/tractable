@@ -817,6 +817,13 @@
       "status": "done",
       "title": "Require a real hosted and downstream check before tagging an auth-affecting release"
     },
+    "release-gate-1-harness": {
+      "claim": null,
+      "needs": [],
+      "priority": "medium",
+      "status": "open",
+      "title": "Check in a reusable harness for release gate 1"
+    },
     "release-provenance-hygiene": {
       "claim": null,
       "needs": [],
