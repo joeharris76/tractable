@@ -163,3 +163,23 @@ def test_appended_notes_from_two_workers_are_both_kept(tmp_path: Path) -> None:
     assert first.update_item("item", context_append="from a")["ok"]
 
     assert second.show_item("item")["data"]["context"] == "base\n\nfrom b\n\nfrom a"
+
+
+def test_clear_not_before_flag_clears_a_hold_without_an_empty_string(tmp_path: Path) -> None:
+    async def scenario(call) -> None:
+        assert (await call("create_item", id="held", title="Held", not_before=FAR))["ok"]
+        assert (await call("take", id="held"))["code"] == "E_NOTHING_READY"
+
+        both = await call("update_item", id="held", not_before=FAR, clear_not_before=True)
+        assert not both["ok"] and "not both" in both["error"]
+        assert (await call("show_item", id="held"))["data"]["waiting_until"] == FAR
+
+        cleared = await call("update_item", id="held", clear_not_before=True, context_append="released")
+
+        assert cleared["ok"], cleared
+        assert set(cleared["data"]["changed"]) == {"context", "not_before"}
+        shown = (await call("show_item", id="held"))["data"]
+        assert "waiting_until" not in shown
+        assert (await call("take", id="held"))["ok"]
+
+    _over_mcp(tmp_path, scenario)

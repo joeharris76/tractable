@@ -67,7 +67,7 @@ an open deferral into a linked planning item (created, or an existing
 `finish` refuses while open deferrals exist (`E_OPEN_DEFERRALS` names
 the blocking ids); `show_item` reports them as `open_deferrals`.
 
-`not_before` (future RFC 3339) holds an open task until then; `""` clears.
+`not_before` (future RFC 3339) holds an open task until then; `""` clears (or `clear_not_before`).
 
 ## Session history
 
