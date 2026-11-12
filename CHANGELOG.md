@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-11
+
 ### Added
 
 - `update_item` accepts `clear_not_before=true` to clear a hold, for clients that
