@@ -138,9 +138,9 @@ def test_get_instructions_resource_and_prompt_report_the_store(tmp_path: Path) -
     _run(tmp_path, scenario)
 
 
-def test_expect_store_accepts_a_fragment_ignoring_case(tmp_path: Path) -> None:
+def test_expect_store_accepts_the_repository_name_ignoring_case(tmp_path: Path) -> None:
     async def scenario(server, session) -> None:
-        for fragment in ("benchbox-state", "BENCHBOX-STATE.git", "  BenchBox  "):
+        for fragment in ("benchbox-state", "BENCHBOX-STATE.git", "  BenchBox-State  ", f"{tmp_path.name}/BenchBox-state"):
             outcome = _result(await session.call_tool("get_instructions", {"expect_store": fragment}))
             assert isinstance(outcome, str), outcome
             assert "## Bound store" in outcome
@@ -204,3 +204,41 @@ def test_reported_resolution_source_follows_the_real_resolver(tmp_path: Path, mo
     assert f"Resolved from: discovered config file {config.resolve()}" in render_instructions(discovered)
     assert "Branch: tracker" in render_instructions(discovered)
     assert "environment (TRACTABLE_STATE_REMOTE)" in render_instructions(environment)
+
+
+def test_expect_store_refuses_a_substring_of_the_repository_name(tmp_path: Path) -> None:
+    async def scenario(server, session) -> None:
+        for fragment in ("benchbox", "bench", "state", "tate.git"):
+            outcome = _result(await session.call_tool("get_instructions", {"expect_store": fragment}))
+            assert isinstance(outcome, dict), fragment
+            assert outcome["kind"] == "gate", outcome
+
+    _run(tmp_path, scenario)
+
+
+@pytest.mark.parametrize(
+    ("remote", "expected", "accepted"),
+    [
+        ("https://github.com/BenchBox-dev/BenchBox.git", "BenchBox-dev/BenchBox", True),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "benchbox-dev/benchbox.git", True),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "https://github.com/BenchBox-dev/BenchBox.git", True),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "git@github.com:BenchBox-dev/BenchBox.git", True),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "benchbox", True),
+        ("https://user:tok@github.com/BenchBox-dev/BenchBox", "BenchBox-dev/BenchBox.git", True),
+        ("git@github.com:BenchBox-dev/BenchBox.git", "benchbox-dev/benchbox", True),
+        ("https://github.com/BenchBox-dev/BenchBox-site.git", "benchbox", False),
+        ("https://github.com/BenchBox-dev/BenchBox-sqlglot.git", "BenchBox-dev/BenchBox", False),
+        ("https://github.com/BenchBox-dev/BenchBox-sqlglot.git", "benchbox-sqlglot", True),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "benchbox-site", False),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "other/BenchBox", False),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "github.com", False),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "todo-state", False),
+        ("https://github.com/BenchBox-dev/BenchBox.git", "  ", False),
+    ],
+)
+def test_check_expected_store_matches_whole_repository_paths(remote: str, expected: str, accepted: bool) -> None:
+    from tractable.mcp.resources import _check_expected_store
+
+    outcome = _check_expected_store(_target("flag", remote=remote), expected)
+
+    assert (outcome is None) is accepted, outcome

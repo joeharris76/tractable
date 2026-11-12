@@ -200,8 +200,9 @@ instructions (the `initialize` handshake, `get_instructions`, the
 `tractable://instructions` resource and the `tractable/workflow` prompt) therefore
 begin with a "Bound store" section: the state remote without credentials,
 the branch, how the target was resolved, and the worker identity. Pass the
-project's repository name as `expect_store` to `get_instructions` on the
-first call; a store that does not contain it is refused with a `gate`-kind
+project's `owner/repo` (or bare repository name) as `expect_store` to
+`get_instructions` on the first call; a store whose repository is not exactly
+that (compared by whole path segment, ignoring case and `.git`) is refused with a `gate`-kind
 `E_STATE` error and nothing is written.
 
 ## Data safety

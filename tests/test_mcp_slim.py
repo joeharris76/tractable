@@ -418,6 +418,8 @@ def test_startup_schema_cost_is_small(tmp_path: Path) -> None:
             # and integration_worktree to recover_batch_owner: 5,614 -> 5,745.
             # The per-batch claim guidance and the verification_path and
             # final_evidence_path arguments: 5,745 -> 5,907.
-            assert tokens <= 5920, tokens
+            # update_item's clear_not_before flag and the exact expect_store
+            # wording: 5,907 -> 5,946.
+            assert tokens <= 5950, tokens
 
     anyio.run(go)

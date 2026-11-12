@@ -397,7 +397,7 @@
   },
   {
     "name": "get_instructions",
-    "description": "Return the tractable autonomous-agent workflow protocol as Markdown, including the bound state store. Pass expect_store, a fragment of the repository name the work belongs to, to refuse a tracker for another project. Portable fallback for the tractable://instructions resource and the tractable/workflow prompt.",
+    "description": "Return the tractable autonomous-agent workflow protocol as Markdown, including the bound state store. Pass expect_store, the work's repository (owner/repo or name, matched exactly), to refuse a tracker for another project. Portable fallback for the tractable://instructions resource and the tractable/workflow prompt.",
     "inputSchema": {
       "properties": {
         "expect_store": {
@@ -1133,7 +1133,7 @@
   },
   {
     "name": "update_item",
-    "description": "Edit task fields or move between open and blocked. Text and list fields are replaced wholesale; an empty value clears one, and not_before=\"\" clears a hold. context_append adds a note to the end of the current context and keeps concurrent notes; not with context.",
+    "description": "Edit task fields or move between open and blocked. Text and list fields are replaced wholesale; an empty value clears one, and not_before=\"\" or clear_not_before=true clears a hold. context_append adds a note to the end of the current context and keeps concurrent notes; not with context.",
     "inputSchema": {
       "properties": {
         "id": {
@@ -1281,6 +1281,11 @@
           ],
           "default": null,
           "title": "Not Before"
+        },
+        "clear_not_before": {
+          "default": false,
+          "title": "Clear Not Before",
+          "type": "boolean"
         }
       },
       "required": [

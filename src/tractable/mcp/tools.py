@@ -18,7 +18,7 @@ from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
 
-from ..errors import E_NO_PRINCIPAL
+from ..errors import E_NO_PRINCIPAL, E_STATE
 from ..service import TrackerService, err, resolve_payload
 from .identity import PrincipalHolder, sanitize_client_name
 from .target import ResolvedTarget
@@ -177,7 +177,8 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         name="update_item",
         description=(
             "Edit task fields or move between open and blocked. Text and list fields are replaced "
-            "wholesale; an empty value clears one, and not_before=\"\" clears a hold. context_append "
+            "wholesale; an empty value clears one, and not_before=\"\" or clear_not_before=true clears a hold. "
+            "context_append "
             "adds a note to the end of the current context and keeps concurrent notes; not with context."
         ),
     )
@@ -194,11 +195,16 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         batch: dict[str, Any] | None = None,
         status: str | None = None,
         not_before: str | None = None,
+        clear_not_before: bool = False,
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
+        if clear_not_before and not_before:
+            return err(E_STATE, "pass not_before or clear_not_before, not both")
+        if clear_not_before:
+            not_before = ""
         svc = _service(target, worker, holder, ctx)
         kwargs: dict[str, Any] = {}
         if title is not None:

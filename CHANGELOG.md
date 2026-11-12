@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `update_item` accepts `clear_not_before=true` to clear a hold, for clients that
+  drop empty-string arguments before they reach the server. `not_before=""`
+  still clears it.
+
+### Fixed
+
+- `get_instructions(expect_store=...)` compares whole repository path segments
+  instead of a substring, so `benchbox` no longer accepts a store for
+  `benchbox-site` or `benchbox-sqlglot`. It accepts `owner/repo`, a bare
+  repository name, or a full URL, each with or without `.git`, ignoring case.
+
 ## [1.1.0] - 2026-11-07
 
 ### Added

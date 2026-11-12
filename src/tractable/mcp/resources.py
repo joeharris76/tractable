@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import urlsplit
 
 from mcp.server.fastmcp import Context, FastMCP
 
@@ -40,17 +41,41 @@ def _client_info(ctx: Context | None):
         return None
 
 
-def _check_expected_store(target: ResolvedTarget, expected: str) -> dict[str, Any] | None:
-    """None when *expected* occurs, ignoring case, in the redacted remote.
+def _path_segments(location: str) -> list[str]:
+    """Lower-cased path segments of a remote or an ``expect_store`` value.
 
-    The branch is not searched: every store's default branch is ``todo-state``,
-    so a fragment such as ``todo`` would otherwise match a tracker for any project.
+    The URL scheme, credentials and host are dropped, as are a trailing
+    ``.git`` and empty segments, so ``https://github.com/Owner/Repo.git``,
+    ``git@github.com:Owner/Repo`` and ``Owner/Repo`` all give ``["owner", "repo"]``.
     """
-    needle = expected.strip().lower()
-    if not needle:
+    text = location.strip()
+    if "://" in text:
+        text = urlsplit(text).path
+    elif "@" in text.partition("/")[0] and ":" in text:
+        # scp-like ``user@host:owner/repo``; a local path never has an
+        # ``@`` before its first slash.
+        text = text.partition(":")[2]
+    segments = [part for part in text.lower().split("/") if part]
+    if segments and segments[-1].endswith(".git"):
+        segments[-1] = segments[-1][: -len(".git")]
+    return [part for part in segments if part]
+
+
+def _check_expected_store(target: ResolvedTarget, expected: str) -> dict[str, Any] | None:
+    """None when *expected* names the bound remote's repository exactly.
+
+    *expected* is ``owner/repo`` or a bare ``repo`` name, optionally as a full URL
+    or with ``.git``; it is compared case-insensitively with the trailing path
+    segments of the remote, whole segments only, so ``benchbox`` does not accept
+    ``benchbox-site``. The branch is never compared: every store's default branch
+    is ``todo-state``.
+    """
+    wanted = _path_segments(expected)
+    if not wanted:
         return err(E_STATE, "expect_store must not be empty")
     actual = target.state_ref.display
-    if needle in target.state_ref.display_remote.lower():
+    have = _path_segments(target.state_ref.display_remote)
+    if len(wanted) <= len(have) and have[len(have) - len(wanted):] == wanted:
         return None
     return err(
         E_STATE,
@@ -90,8 +115,8 @@ def register_instructions(
         name="get_instructions",
         description=(
             "Return the tractable autonomous-agent workflow protocol as Markdown, including the "
-            "bound state store. Pass expect_store, a fragment of the repository name the work "
-            "belongs to, to refuse a tracker for another project. Portable fallback for the "
+            "bound state store. Pass expect_store, the work's repository "
+            "(owner/repo or name, matched exactly), to refuse a tracker for another project. Portable fallback for the "
             "tractable://instructions resource and the tractable/workflow prompt."
         ),
     )
