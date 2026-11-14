@@ -1,10 +1,17 @@
 {
   "acceptance": [
-    "scripts/release_gate1.py passes against a candidate built from main and fails (non-zero, failing check named) when pointed at a build with a deliberately broken check, for example an older version string.",
-    "release-gates.md gate 1 names the script and its final line as the evidence to record.",
-    "A CI job or test runs the harness against the current tree so it cannot drift from the tool surface."
+    "scripts/release_gate1.py, run against a wheel built from main, prints `Gate 1: N/N checks passed` and exits 0.",
+    "Run against tractable 1.0.0 installed from PyPI, it exits non-zero, and the failing lines are the version lines plus the 1.1.x checks (per-batch claim slot, clear_not_before, prefix-sibling expect_store); the output is recorded in the PR body.",
+    "A CI job builds the wheel, installs it with the mcp extra in a fresh venv and runs the harness; it is green on the PR.",
+    "release-gates.md gate 1 names the script and its final line as the evidence to record, and the Automation boundary section describes the CI run."
   ],
-  "description": "Gap. docs/operations/release-gates.md describes gate 1 (scratch bootstrap, create, take, renew, finish, a conflicting write, an offline read, driven through the MCP server) but the repository has no script for it, so each release rebuilds it by hand and coverage varies. 1.0.0 used an ad-hoc /tmp/joe-gate/gate1.py (21 checks); 1.1.0 rewrote it (24 checks, adding the per-batch claim slot); 1.1.1 ran a shorter manual sequence recorded in the PR #74 body. The scripts were deleted afterwards, so the evidence cannot be rerun or reviewed. Add scripts/release_gate1.py taking the candidate's bin directory and expected version, using a scratch bare remote and isolated caches, unsetting inherited TRACTABLE_* variables, and printing one PASS/FAIL line per check plus a final `Gate 1: N/N checks passed`. Cover at least: both --version outputs; bootstrap and validate; serverInfo and the tractable_batch capability; bound store and an expect_store mismatch refused (including a prefix sibling such as repo vs repo-site); create, take, renew, a second take refused, a second worker refused the live claim and writing on top, two concurrent writers both publishing, finish, drop with a reason, list reflecting all writers; register_batch and the per-batch claim slot; update_item clear_not_before; offline read served stale and offline write refused with E_OFFLINE; final validate counts; state commits authored by tractable with todo(op) subjects.",
+  "description": "Gap. docs/operations/release-gates.md defines gate 1 (a scratch state-branch lifecycle driven through the MCP server), but the repository has no script for it, so each release rebuilds it by hand and coverage varies: 1.0.0 used an ad-hoc gate1.py (21 checks), 1.1.0 a rewrite (24 checks, adding the per-batch claim slot), and 1.1.1 a shorter manual sequence recorded in the #74 body. The scripts were deleted afterwards, so the evidence cannot be rerun or reviewed.\n\nDecision (owner, 2026-11-14): check in scripts/release_gate1.py and also run it in CI against the wheel built from the tree, on a scratch remote. Amend release-gates.md, section Automation boundary, to describe that CI run. A release still records the operator's own run on the candidate as gate 1 evidence.\n\nScope: the script takes the candidate's bin directory and the expected version, prints one PASS/FAIL line per check and a final `Gate 1: N/N checks passed`, and exits non-zero on any failure. It checks at least:\n- both --version outputs; bootstrap and validate;\n- serverInfo name and version, and the tractable_batch capability;\n- the bound store; an expect_store mismatch refused; a prefix sibling (repo versus repo-site) refused;\n- create, take, renew, a second ordinary take refused with E_MULTIPLE_CLAIMS, a second worker refused the live claim and writing on top, two concurrent writers both publishing, finish, drop with a reason, and a list reflecting every writer;\n- register_batch and the per-batch claim slot: a member and an ordinary item held together, a second of either refused;\n- update_item clear_not_before making a held item ready;\n- an offline read served stale, and an offline write refused with E_OFFLINE;\n- final validate counts, and every state commit authored by `tractable <tractable@localhost>` with a `todo(` subject.\n\nGuardrails:\n- The harness writes only to a bare remote it created under a fresh temp directory.\n- It runs from a temp directory with --repo-root pointed there and unsets TRACTABLE_* variables, so it can never discover a real .tractable/config.json or remote.\n- No network access; it removes its temp directory on exit, including on failure.\n- CI never touches a real state branch.",
+  "links": [
+    "docs/operations/release-gates.md",
+    "https://github.com/joeharris76/tractable/pull/70",
+    "https://github.com/joeharris76/tractable/pull/72",
+    "https://github.com/joeharris76/tractable/pull/74"
+  ],
   "sessions": [
     {
       "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:55230d241771abb0a545d2ed",
@@ -13,6 +20,14 @@
       "op": "create",
       "op_id": "7940d0948a30430a86ccff1c8720d5c9",
       "session_id": "0321b487455a41afbedc7aef84edb48e"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:05:32Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "ad7926aa2a9443f497c5d149c6dd0def",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
     }
   ]
 }
