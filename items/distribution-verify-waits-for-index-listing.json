@@ -5,6 +5,7 @@
     "publish.yml distribution-verify has timeout-minutes: 20, above the 8-minute poll bound plus install time; all existing tests in tests/test_index_release.py still pass.",
     "docs/operations/release-gates.md, section After the tag, says the verify step waits up to 8 minutes for the index to list the version."
   ],
+  "context": "2026-11-14 done in https://github.com/joeharris76/tractable/pull/75 (merge 2ef7b7c, head 6ff3751; CI test (3.10), test (3.13), release-gate1 green). scripts/verify_index_release.py polls https://pypi.org/simple/tractable/ with Accept: application/vnd.pypi.simple.v1+json and Cache-Control: no-cache for up to 480 s, polling again only on 5xx and failing at once on any other HTTP error or malformed listing, then installs once; interval, deadline, clock, sleep and fetch are injectable. New tests in tests/test_index_release.py: install runs exactly once after the listing appears; a never-listed version fails naming the version and 480s; the poll carries Cache-Control: no-cache (fake and default fetch); an install failure after listing is not retried and stops polling. publish.yml distribution-verify timeout-minutes: 20. release-gates.md After the tag states the 8-minute wait. Full suite 505 passed; ruff clean. Takes effect for tags created after 2ef7b7c.",
   "description": "Defect. `distribution-verify` (publish.yml, the opt-in PyPI run) installs `tractable[mcp]==$VERSION` from https://pypi.org/simple seconds after `pypi-publish` finishes. PyPI's simple index can lag an upload by a minute or more, so the install fails with \"there is no version of tractable[mcp]==X\" even though the upload succeeded and the same job already verified both files' hashes from PyPI's JSON API. Observed on the 1.1.1 run (links): attempts 1 and 2 failed this way at 12:53 and 12:54 UTC; the same uv command failed locally at 12:54 and succeeded about two minutes later; attempt 3 passed unchanged. Effect: the run is marked failed, needs a manual job rerun, and looks like a broken release.\n\nDecision (owner, 2026-11-14): poll, then install once. In scripts/verify_index_release.py, before the fresh install, request https://pypi.org/simple/tractable/ (PEP 691 JSON, with `Cache-Control: no-cache`, because PyPI serves that page with max-age=600) until it lists the version, for at most 8 minutes; then run the existing install once. Raise distribution-verify's `timeout-minutes` from 10 to 20 so the job timeout cannot cut the wait short.\n\nGuardrails:\n- Never upload again, start another publish run, or retry the install itself.\n- Keep `uv --no-config --no-cache` and the isolated environment unchanged.\n- Do not change which bytes are checked, the version checks, or the MCP initialize/tools-list check.\n- The wait polls one condition (version listed). A transient 5xx is polled again; any other HTTP error or malformed response fails at once.\n- Effective only for tags created after it lands: a dispatch runs the workflow stored at its tag.",
   "links": [
     "https://github.com/joeharris76/tractable/actions/runs/43133361734",
@@ -37,6 +38,14 @@
       "generation": "110125c945cc446699f597d86118d6eb",
       "op": "take",
       "op_id": "b554899051344ed983c61779a8ab7371",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:19:26Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "cf69eb42019542c8b88c4ae706aee29f",
       "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
     }
   ]
