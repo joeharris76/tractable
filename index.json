@@ -609,6 +609,13 @@
       "status": "done",
       "title": "The six hot-path lifecycle tools"
     },
+    "mcp-write-timeout-unknown-outcome": {
+      "claim": null,
+      "needs": [],
+      "priority": "medium",
+      "status": "open",
+      "title": "Let a client reconcile a tracker write that outlived its request timeout"
+    },
     "offline-reads-wait-full-ls-remote-timeout": {
       "claim": null,
       "needs": [],

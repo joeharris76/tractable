@@ -1,0 +1,23 @@
+{
+  "acceptance": [
+    "The slow phase behind the observed timeouts is identified from server logs and measurements, with p95 take/finish latency recorded here before and after the fix.",
+    "A write that exceeds the client timeout can be reconciled without reading the whole item: the response or a read by operation id says whether it applied.",
+    "Retrying the same context_append with the same operation id does not append twice, covered by a test.",
+    "The timeout guidance in the todo skill or docs names how to reconcile."
+  ],
+  "description": "Product defect reported from BenchBox, where it is tracked as tractable-mcp-write-timeout-unknown-outcome-20261113 and tractable-mcp-request-timeouts-20261112; both say the fix belongs in tractable.\n\nOn 2026-11-12, against the BenchBox state store, several calls failed at the MCP client with \"Request timeout after 30000ms ... the request outcome is unknown\":\n- a finish (the item turned out done) and a take (the item stayed open; a retry took it);\n- under heavy host load (load average 8-37, swap above 90%), a list_items and two update_item context_append writes, both of which had landed.\nThe client cannot tell whether a write applied. A blind retry of finish is refused or double-applies; a blind take retry can hit E_MULTIPLE_CLAIMS; a retried context_append appends twice. Agents must read state back by hand. A third BenchBox report misattributed a scripted 30-second deadline to the MCP timeout and was dropped as a duplicate.\n\nDecision (owner, 2026-11-14): file in tractable and do not implement in this round; the cause is not yet investigated.\n\nDecision gate for the implementer: first measure where the time goes (state-branch fetch, push, publication retry, lock contention or host load) from server logs. Then choose between (a) a timed-out write being reconcilable by operation id, with idempotent retries of the same operation id, and (b) making writes finish within the client timeout. Record the choice and the measurements here.\n\nGuardrails:\n- No change to claim semantics or one-winner publication.\n- No silent retries inside the server that could double-apply a write.\n- Do not raise the client timeout so far that a hung remote blocks a session indefinitely.",
+  "links": [
+    "BenchBox: tractable-mcp-write-timeout-unknown-outcome-20261113",
+    "BenchBox: tractable-mcp-request-timeouts-20261112"
+  ],
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:06:09Z",
+      "client": "omp-coding-agent",
+      "op": "create",
+      "op_id": "dc3ebf8a1d724018a5c9a5ff07eddc84",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
+    }
+  ]
+}
