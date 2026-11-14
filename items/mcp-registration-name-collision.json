@@ -1,9 +1,13 @@
 {
   "acceptance": [
-    "For each client listed, mcp-clients.md states which registration runs when a user-level and a project-level server share the name `tractable`, based on an observed run.",
-    "The doc gives one recommended setup for projects that pin a runtime, and how to confirm which version a session is running."
+    "docs/operations/mcp-clients.md has a section stating, for omp, Claude Code, Codex, Gemini and opencode, which `tractable` server runs when a user-level registration and a project .mcp.json registration share the name; each statement is marked observed (with how) or documented (with its source).",
+    "The section tells a project that pins a runtime how to confirm the running version (serverInfo.version or tractable_batch.tool_version from the client, or the process command line), and that expect_store confirms the store, not the version."
   ],
-  "description": "Gap found during the rename rollout. BenchBox registers a project server named `tractable` in .mcp.json that runs its pinned runtime (`uv run --project _project/scripts --locked -- tractable-mcp`). This machine also registers a user-level server named `tractable` that runs the global `tractable-mcp` (~/.codex/config.toml, ~/.gemini/settings.json, ~/.config/opencode/opencode.jsonc). omp documents that Codex and Gemini imports take precedence over a root .mcp.json for the same server name (omp mcp-config docs, about lines 483-497), yet on 2026-11-09 a session started in the BenchBox primary clone ran the project server (pid 40847), not the global one. The rule a client actually applies decides whether a project gets its pinned runtime or whatever version is installed globally; with differing versions (1.0.0 global vs 1.1.0 pinned on 2026-11-11) that can change claim behaviour mid-project. docs/operations/mcp-clients.md says nothing about this. Investigate the precedence per client (omp, Claude Code, Codex, Gemini, opencode) with both registrations present, and document it with a recommendation: for example a distinct name for the global registration, or relying on expect_store plus a version check.",
+  "description": "Gap. BenchBox registers a project server named `tractable` in .mcp.json that runs its pinned runtime (`uv run --project _project/scripts --locked -- tractable-mcp`). This machine also registers a user-level server named `tractable` that runs the global tractable-mcp (~/.codex/config.toml, ~/.gemini/settings.json, ~/.config/opencode/opencode.jsonc). Which one a session runs decides whether it gets the project's pinned version or the global one, and docs/operations/mcp-clients.md does not say.\n\nEvidence so far:\n- omp's MCP configuration doc, section \"Discovery and precedence\", ranks its Claude Code provider, which reads the project .mcp.json, above Codex, Gemini and OpenCode, and the first definition wins.\n- Observed with ps on 2026-11-12: all 11 omp sessions started in the BenchBox primary clone ran the project venv's tractable-mcp.\n- [INFERENCE from their config formats; not observed] Codex, Gemini and opencode do not read .mcp.json, so in a project they run the global tool.\n\nDecision (owner, 2026-11-14): keep the shared name `tractable` and document, per client, which registration runs and how to confirm the running version.\n\nGuardrails:\n- No rename of any registration: the server name is part of every MCP tool name (mcp__tractable_*) and of every project's enabledMcpjsonServers.\n- No change to client configuration on this machine; documentation only.\n- Every claim in the doc is marked as observed (and how) or documented (with its source).",
+  "links": [
+    "docs/operations/mcp-clients.md",
+    "omp://mcp-config.md"
+  ],
   "sessions": [
     {
       "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:55230d241771abb0a545d2ed",
@@ -12,6 +16,14 @@
       "op": "create",
       "op_id": "204c3bfd27b24666a5697c0458aefdc6",
       "session_id": "0321b487455a41afbedc7aef84edb48e"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:05:33Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "ecec0cab0c0a4672882e285435232c17",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
     }
   ]
 }

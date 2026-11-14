@@ -515,7 +515,7 @@
       "needs": [],
       "priority": "low",
       "status": "open",
-      "title": "Document which tractable server wins when global and project registrations share a name"
+      "title": "Document which tractable server each client runs when global and project registrations share a name"
     },
     "mcp-remove-agent-cli-surface": {
       "claim": null,
