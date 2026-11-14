@@ -225,15 +225,10 @@
       "title": "Cutover + rollback rehearsal against post-findings production shape"
     },
     "distribution-verify-waits-for-index-listing": {
-      "claim": {
-        "expires_at": "2026-11-15T21:19:18Z",
-        "generation": "110125c945cc446699f597d86118d6eb",
-        "renewals": 0,
-        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68"
-      },
+      "claim": null,
       "needs": [],
       "priority": "medium",
-      "status": "active",
+      "status": "done",
       "title": "Let distribution-verify wait for PyPI to list a just-uploaded version"
     },
     "drop-reason-text-cap-and-secret-scan": {
