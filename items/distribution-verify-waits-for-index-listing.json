@@ -1,10 +1,18 @@
 {
   "acceptance": [
-    "A test with a fake index that lists the version only after N polls shows the install runs after it appears; a fake index that never lists it fails with a message naming the version and the wait.",
-    "No check is weakened: hash verification, both --version outputs and the MCP initialize/tools-list still gate success.",
-    "docs/operations/release-gates.md says the verify step waits for the index listing and for how long."
+    "tests/test_index_release.py: with a fake index that lists the version after N polls, the install runs exactly once, after it appears; with a fake index that never lists it, the script fails after the bounded wait with a message naming the version and the wait; the poll request carries Cache-Control: no-cache.",
+    "A test shows that an install failure after the version is listed fails immediately, with no retry.",
+    "publish.yml distribution-verify has timeout-minutes: 20, above the 8-minute poll bound plus install time; all existing tests in tests/test_index_release.py still pass.",
+    "docs/operations/release-gates.md, section After the tag, says the verify step waits up to 8 minutes for the index to list the version."
   ],
-  "description": "Defect. `distribution-verify` installs `tractable[mcp]==$VERSION` from https://pypi.org/simple seconds after `pypi-publish` finishes. PyPI's simple index can lag the upload by a minute or two, so the install fails with \"there is no version of tractable[mcp]==1.1.1\" even though the upload succeeded and the byte check in the same job already verified both files from PyPI's JSON API. Observed on the 1.1.1 opt-in run https://github.com/joeharris76/tractable/actions/runs/43133361734: attempts 1 (12:53 UTC) and 2 (12:54 UTC) failed this way; the same `uv --no-config --no-cache pip install` failed locally at 12:54 and succeeded about two minutes later; attempt 3 passed unchanged. The run is marked failed and someone has to rerun the job by hand, and a reader of the failure can mistake it for a broken release. Fix in scripts/verify_index_release.py: before the fresh install, poll the simple index (same request uv makes) until it lists the version, with a bounded wait of about 10 minutes, then install once; keep every byte, version and MCP check unchanged and fail with a clear message if the version never appears.",
+  "description": "Defect. `distribution-verify` (publish.yml, the opt-in PyPI run) installs `tractable[mcp]==$VERSION` from https://pypi.org/simple seconds after `pypi-publish` finishes. PyPI's simple index can lag an upload by a minute or more, so the install fails with \"there is no version of tractable[mcp]==X\" even though the upload succeeded and the same job already verified both files' hashes from PyPI's JSON API. Observed on the 1.1.1 run (links): attempts 1 and 2 failed this way at 12:53 and 12:54 UTC; the same uv command failed locally at 12:54 and succeeded about two minutes later; attempt 3 passed unchanged. Effect: the run is marked failed, needs a manual job rerun, and looks like a broken release.\n\nDecision (owner, 2026-11-14): poll, then install once. In scripts/verify_index_release.py, before the fresh install, request https://pypi.org/simple/tractable/ (PEP 691 JSON, with `Cache-Control: no-cache`, because PyPI serves that page with max-age=600) until it lists the version, for at most 8 minutes; then run the existing install once. Raise distribution-verify's `timeout-minutes` from 10 to 20 so the job timeout cannot cut the wait short.\n\nGuardrails:\n- Never upload again, start another publish run, or retry the install itself.\n- Keep `uv --no-config --no-cache` and the isolated environment unchanged.\n- Do not change which bytes are checked, the version checks, or the MCP initialize/tools-list check.\n- The wait polls one condition (version listed). A transient 5xx is polled again; any other HTTP error or malformed response fails at once.\n- Effective only for tags created after it lands: a dispatch runs the workflow stored at its tag.",
+  "links": [
+    "https://github.com/joeharris76/tractable/actions/runs/43133361734",
+    "scripts/verify_index_release.py",
+    ".github/workflows/publish.yml",
+    "tests/test_index_release.py",
+    "docs/operations/release-gates.md"
+  ],
   "sessions": [
     {
       "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:55230d241771abb0a545d2ed",
@@ -13,6 +21,14 @@
       "op": "create",
       "op_id": "c75c300ac2294e508559add46fc433de",
       "session_id": "0321b487455a41afbedc7aef84edb48e"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:05:29Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "25b7346202884bba871d991d43ff2488",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
     }
   ]
 }
