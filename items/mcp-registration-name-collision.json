@@ -3,6 +3,7 @@
     "docs/operations/mcp-clients.md has a section stating, for omp, Claude Code, Codex, Gemini and opencode, which `tractable` server runs when a user-level registration and a project .mcp.json registration share the name; each statement is marked observed (with how) or documented (with its source).",
     "The section tells a project that pins a runtime how to confirm the running version (serverInfo.version or tractable_batch.tool_version from the client, or the process command line), and that expect_store confirms the store, not the version."
   ],
+  "context": "2026-11-14 done in https://github.com/joeharris76/tractable/pull/75 (merge 2ef7b7c). docs/operations/mcp-clients.md has a new section: omp (observed with ps on 2026-11-12: sessions started in the BenchBox clone run the project's pinned server), Claude Code (documented, source linked), Codex, Gemini CLI and opencode (documented: they do not read .mcp.json, so they run their own user-level registration, the global tool). It explains how to confirm a session's version (serverInfo.version, tractable_batch.tool_version, or the process command line) and that expect_store confirms the store, not the version. No registration renamed, no client config changed. Correction to this item's evidence: on a closer read, omp's \"Discovery and precedence\" lists the Claude Code provider's project files as .claude/.mcp.json and .claude/mcp.json and the root .mcp.json only as the lowest-priority fallback, so the doc alone does not explain why the project server wins; the doc therefore marks the omp row as observed, not documented.",
   "description": "Gap. BenchBox registers a project server named `tractable` in .mcp.json that runs its pinned runtime (`uv run --project _project/scripts --locked -- tractable-mcp`). This machine also registers a user-level server named `tractable` that runs the global tractable-mcp (~/.codex/config.toml, ~/.gemini/settings.json, ~/.config/opencode/opencode.jsonc). Which one a session runs decides whether it gets the project's pinned version or the global one, and docs/operations/mcp-clients.md does not say.\n\nEvidence so far:\n- omp's MCP configuration doc, section \"Discovery and precedence\", ranks its Claude Code provider, which reads the project .mcp.json, above Codex, Gemini and OpenCode, and the first definition wins.\n- Observed with ps on 2026-11-12: all 11 omp sessions started in the BenchBox primary clone ran the project venv's tractable-mcp.\n- [INFERENCE from their config formats; not observed] Codex, Gemini and opencode do not read .mcp.json, so in a project they run the global tool.\n\nDecision (owner, 2026-11-14): keep the shared name `tractable` and document, per client, which registration runs and how to confirm the running version.\n\nGuardrails:\n- No rename of any registration: the server name is part of every MCP tool name (mcp__tractable_*) and of every project's enabledMcpjsonServers.\n- No change to client configuration on this machine; documentation only.\n- Every claim in the doc is marked as observed (and how) or documented (with its source).",
   "links": [
     "docs/operations/mcp-clients.md",
@@ -32,6 +33,14 @@
       "generation": "5e663d3d7898438186793c1bbb2972b9",
       "op": "take",
       "op_id": "6b1af0c11c794f57917d81816f94fa15",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:19:53Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "3a487608cc7c471faf8e056190c9fccd",
       "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
     }
   ]
