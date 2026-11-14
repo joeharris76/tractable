@@ -1,0 +1,24 @@
+{
+  "acceptance": [
+    "skills/todo/SKILL.md describes expect_store as matching whole repository path segments (owner/repo, bare name or URL, case-insensitive), documents clear_not_before=true as the 1.1.1 way to clear a hold with not_before=\"\" still valid, and has the tool_version check with the restart instruction.",
+    "The catalog PR is merged, and deployment/global/skill-sync.conf on main pins its merge commit.",
+    "skill-sync apply, verify and check pass for the three global targets at that revision, and ~/.claude/skills/todo/SKILL.md no longer contains the word substring.",
+    "BenchBox develop's skill mirror is regenerated at that revision through its sync command, in a merged PR."
+  ],
+  "description": "Defect in the shared todo skill (joeharris76/skill-sync-skills, skills/todo/SKILL.md; catalog main 92bd9cf and the deployed global mirrors).\n- It says expect_store is \"a case-insensitive substring of the remote only\". Since tractable 1.1.1 (#73) the server compares whole trailing repository path segments, case-insensitively, and accepts owner/repo, a bare repository name or a full URL.\n- It never mentions update_item clear_not_before=true, added in 1.1.1 for clients that drop empty-string arguments; it documents only not_before=\"\".\n- Nothing tells an agent that a long-running server keeps the code it started with. Observed 2026-11-13: a BenchBox server started at 08:16 from _project/scripts/.venv still ran 1.1.0 (and accepted the prefix BenchBox-dev/Bench) because the venv moved to 1.1.1 four minutes later.\n\nDecision (owner, 2026-11-14):\n- Fix all three in the catalog. The version check: after get_instructions, compare tractable_batch.tool_version from the server with the project's pinned runtime (in a vendoring project, the wheel under its vendor directory); if the server is older, stop tracker writes and ask the operator to restart the session.\n- Then move the global deployment pin (deployment/global/skill-sync.conf on main and ~/.skill-sync-deployment/skill-sync.conf) and run skill-sync apply, verify and check.\n- Re-pin only BenchBox's skill mirror now, because its open item tractable-expect-store-substring-match-20261112 requires the mirror. Other projects pick the change up at their next routine skill bump.\n\nGuardrails:\n- The skill keeps \"requires tractable 1.0.0 or later\"; 1.1.1-only features say so where they are described.\n- No other skill text changes.\n- The catalog PR is squash-merged from a worktree; the owner's uncommitted or conflicted files in ~/Developer/skill-sync-skills are not touched.\n- Skill mirrors are never hand-edited; they change only by sync.",
+  "links": [
+    "https://github.com/joeharris76/tractable/pull/73",
+    "https://github.com/joeharris76/skill-sync-skills",
+    "BenchBox: tractable-expect-store-substring-match-20261112"
+  ],
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:06:07Z",
+      "client": "omp-coding-agent",
+      "op": "create",
+      "op_id": "d5248602c1df459fb010359c77dd60ec",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
+    }
+  ]
+}

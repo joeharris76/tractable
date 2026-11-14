@@ -981,6 +981,13 @@
       "status": "done",
       "title": "Audit test doubles for stubs that agree with the implementation instead of testing it"
     },
+    "todo-skill-expect-store-hold-clear-and-version-check": {
+      "claim": null,
+      "needs": [],
+      "priority": "medium",
+      "status": "open",
+      "title": "Update the todo skill for exact expect_store matching, clear_not_before and a server-version check"
+    },
     "tpchavoc-1v8-qualify-order-by-loss": {
       "claim": null,
       "needs": [],
