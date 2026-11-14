@@ -511,10 +511,15 @@
       "title": "Machine-readable next_action with dual-emitted command string"
     },
     "mcp-registration-name-collision": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-15T21:19:43Z",
+        "generation": "5e663d3d7898438186793c1bbb2972b9",
+        "renewals": 0,
+        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68"
+      },
       "needs": [],
       "priority": "low",
-      "status": "open",
+      "status": "active",
       "title": "Document which tractable server each client runs when global and project registrations share a name"
     },
     "mcp-remove-agent-cli-surface": {
