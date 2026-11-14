@@ -52,6 +52,7 @@ include = [
     "/docs",
     "/skills",
     "/scripts/verify_index_release.py",
+    "/scripts/release_gate1.py",
     "/README.md",
     "/CHANGELOG.md",
     "/LICENSE",

@@ -47,3 +47,21 @@ jobs:
           git -C "$RUNNER_TEMP/skill-sync" checkout --detach "$SKILL_SYNC_SHA"
           sh "$RUNNER_TEMP/skill-sync/bin/skill-sync" verify
 
+
+  release-gate1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Build the wheel from this tree
+        run: uv build --wheel --out-dir "$RUNNER_TEMP/gate1-dist"
+      - name: Install the wheel with the mcp extra in a fresh venv
+        run: |
+          uv venv "$RUNNER_TEMP/gate1-venv"
+          uv pip install --python "$RUNNER_TEMP/gate1-venv/bin/python" "$(ls "$RUNNER_TEMP"/gate1-dist/*.whl)[mcp]"
+      - name: Gate 1 lifecycle on a scratch remote
+        run: |
+          VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          "$RUNNER_TEMP/gate1-venv/bin/python" scripts/release_gate1.py "$RUNNER_TEMP/gate1-venv/bin" "$VERSION"
