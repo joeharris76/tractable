@@ -26,19 +26,26 @@ gate. When in doubt, run both; they cost minutes.
 
 ## Gate 1: scratch state-branch lifecycle
 
-With the release candidate installed, run a full lifecycle against a scratch
-bare remote — bootstrap, create, take, renew, finish, plus a conflicting
-write and an offline read:
+With the release candidate installed in its own venv (the `mcp` extra
+included), run the harness with that venv's python:
 
 ```sh
-git init --bare /tmp/gate-state.git
-tractable bootstrap --state-remote /tmp/gate-state.git
-tractable validate --state-remote /tmp/gate-state.git
+<venv>/bin/python scripts/release_gate1.py <venv>/bin "$VERSION"
 ```
 
-then drive one `take` → `finish` round through the MCP server. A gate that
-passes without touching the publication path the release changed is the
-v0.4.2 failure mode; `--help` output is not evidence.
+It writes only to a bare remote under a fresh temporary directory, removed on
+exit, with `TRACTABLE_*` unset in every child, and prints one
+`PASS|FAIL  <check>  <detail>` line per check and a final
+`Gate 1: N/N checks passed`; it exits non-zero on any failure. The checks cover
+both `--version` outputs, bootstrap and validate, the server's name, version and
+`tractable_batch` capability, the bound store with `expect_store` mismatch and
+prefix-sibling refusals, create, take, renew, `E_MULTIPLE_CLAIMS` on a second
+ordinary take, a second worker refused a live claim, concurrent writers, finish,
+drop, `list_items`, `register_batch` with the per-batch claim slot,
+`clear_not_before`, an offline stale read and `E_OFFLINE` write, final validate
+counts, and state-commit authorship. Record its command line and final line as
+the gate's evidence. A gate that passes without touching the publication path
+the release changed is the v0.4.2 failure mode; `--help` output is not evidence.
 
 ## Gate 2: real downstream consumer
 
@@ -79,7 +86,11 @@ receives exactly the released bytes. `distribution-verify` then fails unless
 the run is on a `v*` tag and both the build and the upload succeeded, checks
 that the files PyPI serves match, and installs `tractable[mcp]==$VERSION` from
 PyPI in a fresh environment, without cache, local configuration or inherited
-tracker variables. Both entry points must report the release version and a
+tracker variables. PyPI's simple index can trail the upload by a minute or
+more, so the verify step waits up to 8 minutes for the index listing: it polls
+`https://pypi.org/simple/tractable/` (bypassing its cache) until the version
+appears, then runs the install once. It never retries the install, uploads again, or starts
+another publish run; a version still unlisted after 8 minutes fails the job. Both entry points must report the release version and a
 real MCP initialize/tools-list exchange must succeed against a scratch remote.
 
 A GitHub release alone is not completed distribution. Missing, yanked or
@@ -95,7 +106,8 @@ python3 scripts/verify_index_release.py "$VERSION" /path/to/release/assets
 
 This post-publication check supplements, never replaces, the pre-tag gates.
 Record the opt-in run's URL and the artifact hashes before announcing
-completed distribution. Only after it passes:
+completed distribution. These steps follow it, except that a vendored consumer
+(step 2) has its own, earlier condition:
 
 1. **Global tool.** Keep the current receipt and a checksum-verified wheel
    compatible with the active schema for rollback. Replace a URL-pinned or
@@ -122,7 +134,11 @@ completed distribution. Only after it passes:
    reinstalling a pre-1.0 wheel through the tractable URL template: pre-1.0 assets are
    named `todo_db-<version>-py3-none-any.whl` and read only `.todo-db/`.
 2. **Vendored consumers.** A repository that vendors the wheel, such as
-   BenchBox's `_project/scripts/vendor/`, needs its own upgrade PR.
+   BenchBox's `_project/scripts/vendor/`, needs its own upgrade PR. It takes the
+   wheel from the GitHub release, so it may adopt the release as soon as the
+   release exists and its `SHA256SUMS` verifies; it need not wait for
+   `distribution-verify`. Index installs, including the global tool in step 1,
+   wait for `distribution-verify` to pass.
 3. **Skill text.** When the release changes what agents should do, merge the
    `todo` skill change in skill-sync-skills, then advance every pin that
    serves it: each project's `skill-sync.conf` (see
@@ -214,8 +230,13 @@ All five held for v0.4.2.
 
 ## Automation boundary
 
-Gate 1's full run and gate 2 stay local operator steps. CI runs a scratch
-state-branch smoke (bootstrap/validate/list against a disposable bare
+CI runs `scripts/release_gate1.py` on every push and pull request, in the
+`release-gate1` job: it builds the wheel from the tree with `uv build`, installs
+it with the `mcp` extra into a fresh venv, and runs the harness against a
+disposable bare remote. That proves the tree's wheel passes the lifecycle; it
+does not replace the operator's own run on the release candidate, which a
+release still records. Gate 2 stays a local operator step. CI also runs a
+scratch state-branch smoke (bootstrap/validate/list against a disposable bare
 remote) plus `uv sync --locked`, which fails the build when the committed
 lockfile drifts from the manifest. CI never touches a real state branch:
 routine automation must not write to authoritative task state.

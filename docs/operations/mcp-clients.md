@@ -174,6 +174,62 @@ A client that does not speak MCP cannot drive the tracker. The floor CLI covers
 bootstrap, validation, migration, and human recovery, but it deliberately has no
 planning or lifecycle verbs — those live only on the MCP surface (ADR 0007).
 
+## Which server runs when two registrations share the name
+
+A user-level registration (the global tool, for example `~/.local/bin/tractable-mcp`)
+and a project `.mcp.json` registration (for example a project venv pinned by
+`uv run --locked`) can both be named `tractable`. Which one a session runs
+depends on the client. Each row says whether the answer was observed or comes
+from the client's documentation.
+
+| Client | Runs | Basis |
+| --- | --- | --- |
+| omp | the project `.mcp.json` server | observed |
+| Claude Code | the project `.mcp.json` server, once approved; otherwise not that one | documented |
+| Codex, Gemini CLI, opencode | their own user-level registration, the global tool | documented |
+
+- **omp (observed).** omp's MCP doc, section "Discovery and precedence", loads
+  providers in descending priority: OMP native config, OMP extension packages,
+  Claude Code, Agent Plugins, Claude marketplace plugins and Codex, Gemini CLI,
+  OpenCode, and so on; across providers the first definition wins and duplicate
+  names are not merged. Claude Code, which supplies the project's Claude Code
+  MCP config, ranks above Codex, Gemini CLI and OpenCode. On 2026-11-12, `ps`
+  showed 11 omp sessions started in the BenchBox clone running the project
+  venv's `tractable-mcp` (`_project/scripts/.venv/bin/tractable-mcp`), not the
+  global tool, although Codex and Gemini user-level `tractable` entries exist.
+  The same doc lists root `.mcp.json` only as the lowest-priority portable
+  fallback and names `.claude/.mcp.json` as the Claude Code project file, so the
+  doc alone would not settle this case; the `ps` observation does. Re-check with
+  `ps` after an omp upgrade.
+- **Claude Code (documented).** Claude Code's MCP doc
+  (<https://code.claude.com/docs/en/mcp>, "Scope hierarchy and precedence")
+  connects a same-named server once, from the highest-precedence definition and
+  without merging fields across scopes: local scope, then project scope
+  (`.mcp.json`), then user scope (`~/.claude.json`). A project `.mcp.json` server
+  must also be approved (`enabledMcpjsonServers`, or the approval prompt; see
+  "Project server approvals and workspace trust"). An unapproved server shows
+  `Pending approval` and is not connected.
+- **Codex, Gemini CLI and opencode (documented).** None of them reads
+  `.mcp.json`. Codex reads `[mcp_servers.*]` in `~/.codex/config.toml`, Gemini
+  CLI `mcpServers` in `~/.gemini/settings.json`, and opencode the `mcp` map in
+  `opencode.json` (`~/.config/opencode/` or the project root). In a project with
+  only a `.mcp.json` registration they therefore run their user-level
+  `tractable`, the global tool, which may be a different version from the
+  project's.
+
+### Confirming what a session runs
+
+- `serverInfo.version` from the MCP `initialize` response is the running
+  server's version.
+- `capabilities.experimental.tractable_batch.tool_version` carries the same
+  version in the experimental capability.
+- The process command line (`ps -axo command | grep tractable-mcp`) shows which
+  binary was launched: a project venv path or the global tool.
+
+`expect_store` on `get_instructions` confirms the **store** the server is bound
+to, not its version: two different `tractable-mcp` versions bound to the same
+remote both pass it. Check the version separately, as above.
+
 ## Verifying a registration
 
 Confirm the state branch resolves, using the floor CLI:

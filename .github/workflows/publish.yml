@@ -82,7 +82,7 @@ jobs:
     needs: [build, pypi-publish]
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'workflow_dispatch' && inputs.publish_pypi == true
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Require a tag ref and a successful build and PyPI upload
         env:

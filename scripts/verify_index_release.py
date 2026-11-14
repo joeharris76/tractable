@@ -9,8 +9,16 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
+from collections.abc import Callable
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
+
+INDEX_URL = "https://pypi.org/simple/tractable/"
+INDEX_HEADERS = {"Accept": "application/vnd.pypi.simple.v1+json", "Cache-Control": "no-cache"}
+INDEX_POLL_INTERVAL_S = 15.0
+INDEX_WAIT_S = 8 * 60.0
 
 
 MCP_SMOKE = """
@@ -62,6 +70,60 @@ def verify_artifacts(dist: Path, version: str, metadata: dict) -> None:
         print(f"Verified {name}: sha256:{digest}")
 
 
+def fetch_index(url: str, headers: dict[str, str]) -> bytes:
+    with urlopen(Request(url, headers=headers), timeout=30) as response:
+        return response.read()
+
+
+def index_lists(listing: object, version: str) -> bool:
+    files = listing.get("files") if isinstance(listing, dict) else None
+    if not isinstance(files, list):
+        raise ValueError("index listing is malformed: no files list")
+    names = []
+    for entry in files:
+        if not isinstance(entry, dict) or not isinstance(entry.get("filename"), str):
+            raise ValueError("index listing is malformed: file entry without a filename")
+        names.append(entry["filename"])
+    return bool({f"tractable-{version}-py3-none-any.whl", f"tractable-{version}.tar.gz"} & set(names))
+
+
+def wait_for_index_listing(
+    version: str,
+    *,
+    fetch: Callable[[str, dict[str, str]], bytes] = fetch_index,
+    sleep: Callable[[float], None] = time.sleep,
+    clock: Callable[[], float] = time.monotonic,
+    interval: float = INDEX_POLL_INTERVAL_S,
+    deadline: float = INDEX_WAIT_S,
+) -> None:
+    start = clock()
+    last = "not listed"
+    while True:
+        try:
+            listing = json.loads(fetch(INDEX_URL, dict(INDEX_HEADERS)))
+        except HTTPError as exc:
+            if exc.code < 500:
+                raise ValueError(f"index listing request failed: HTTP {exc.code}") from exc
+            last = f"HTTP {exc.code}"
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"index listing is malformed: {exc}") from exc
+        else:
+            if index_lists(listing, version):
+                return
+            last = "not listed"
+        if clock() - start >= deadline:
+            raise ValueError(
+                f"tractable {version} was not listed at {INDEX_URL} within {deadline:g}s ({last}); "
+                "the upload is not retried"
+            )
+        sleep(interval)
+
+
+def install_after_listing(version: str, install: Callable[[], None], **wait: object) -> None:
+    wait_for_index_listing(version, **wait)
+    install()
+
+
 def isolated_env(root: Path) -> dict[str, str]:
     env = {
         key: value for key, value in os.environ.items()
@@ -111,10 +173,13 @@ def main() -> None:
             ["uv", "--no-config", "--no-cache", "venv", "--python", sys.executable, str(python.parent.parent)],
             cwd=root, env=env, check=True, timeout=60,
         )
-        subprocess.run(
-            ["uv", "--no-config", "--no-cache", "pip", "install", "--python", str(python),
-             "--default-index", "https://pypi.org/simple", f"tractable[mcp]=={args.version}"],
-            cwd=root, env=env, check=True, timeout=180,
+        install_after_listing(
+            args.version,
+            lambda: subprocess.run(
+                ["uv", "--no-config", "--no-cache", "pip", "install", "--python", str(python),
+                 "--default-index", "https://pypi.org/simple", f"tractable[mcp]=={args.version}"],
+                cwd=root, env=env, check=True, timeout=180,
+            ),
         )
         smoke_environment(python.parent, args.version, root)
     print(f"Index distribution verified: tractable {args.version}")
