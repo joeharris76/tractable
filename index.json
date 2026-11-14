@@ -832,15 +832,10 @@
       "title": "Require a real hosted and downstream check before tagging an auth-affecting release"
     },
     "release-gate-1-harness": {
-      "claim": {
-        "expires_at": "2026-11-15T21:19:30Z",
-        "generation": "c375589948864c34a883085e446ae8a4",
-        "renewals": 0,
-        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68"
-      },
+      "claim": null,
       "needs": [],
       "priority": "medium",
-      "status": "active",
+      "status": "done",
       "title": "Check in a reusable harness for release gate 1"
     },
     "release-provenance-hygiene": {
