@@ -989,10 +989,15 @@
       "title": "Audit test doubles for stubs that agree with the implementation instead of testing it"
     },
     "todo-skill-expect-store-hold-clear-and-version-check": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-15T22:12:13Z",
+        "generation": "afa17c66b3304dddb948ccc74f387247",
+        "renewals": 0,
+        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68"
+      },
       "needs": [],
       "priority": "medium",
-      "status": "open",
+      "status": "active",
       "title": "Update the todo skill for exact expect_store matching, clear_not_before and a server-version check"
     },
     "tpchavoc-1v8-qualify-order-by-loss": {
