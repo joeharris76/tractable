@@ -5,6 +5,7 @@
     "A CI job builds the wheel, installs it with the mcp extra in a fresh venv and runs the harness; it is green on the PR.",
     "release-gates.md gate 1 names the script and its final line as the evidence to record, and the Automation boundary section describes the CI run."
   ],
+  "context": "2026-11-14 done in https://github.com/joeharris76/tractable/pull/75 (merge 2ef7b7c). scripts/release_gate1.py <bin-dir> <expected-version> prints one PASS|FAIL line per check and `Gate 1: N/N checks passed`, exit non-zero on failure; writes only to a bare remote under a fresh temp dir that is always removed; children run with TRACTABLE_* and GIT_* unset. The 'second worker' check is split in two: a second worker's take and finish on the live claim are refused, and concurrent context_append notes from both workers both survive with the claim kept by the first (concurrent notes are allowed by design). Results: wheel built from the branch, expected 1.1.1: `Gate 1: 28/28 checks passed`, exit 0. tractable[mcp]==1.0.0 from PyPI: `Gate 1: 21/28 checks passed`, exit 1, failing exactly the two --version lines, serverInfo version, tractable_batch tool_version, expect_store prefix sibling refused, update_item clear_not_before, and per-batch claim slot (both summaries in the PR body). New CI job release-gate1 builds the wheel, installs it with the mcp extra in a fresh venv and runs the harness: green, 28/28. release-gates.md gate 1 names the script and its final line as the evidence; Automation boundary describes the CI run and keeps the operator's own run as release evidence. pyproject.toml includes the script in the sdist.",
   "description": "Gap. docs/operations/release-gates.md defines gate 1 (a scratch state-branch lifecycle driven through the MCP server), but the repository has no script for it, so each release rebuilds it by hand and coverage varies: 1.0.0 used an ad-hoc gate1.py (21 checks), 1.1.0 a rewrite (24 checks, adding the per-batch claim slot), and 1.1.1 a shorter manual sequence recorded in the #74 body. The scripts were deleted afterwards, so the evidence cannot be rerun or reviewed.\n\nDecision (owner, 2026-11-14): check in scripts/release_gate1.py and also run it in CI against the wheel built from the tree, on a scratch remote. Amend release-gates.md, section Automation boundary, to describe that CI run. A release still records the operator's own run on the candidate as gate 1 evidence.\n\nScope: the script takes the candidate's bin directory and the expected version, prints one PASS/FAIL line per check and a final `Gate 1: N/N checks passed`, and exits non-zero on any failure. It checks at least:\n- both --version outputs; bootstrap and validate;\n- serverInfo name and version, and the tractable_batch capability;\n- the bound store; an expect_store mismatch refused; a prefix sibling (repo versus repo-site) refused;\n- create, take, renew, a second ordinary take refused with E_MULTIPLE_CLAIMS, a second worker refused the live claim and writing on top, two concurrent writers both publishing, finish, drop with a reason, and a list reflecting every writer;\n- register_batch and the per-batch claim slot: a member and an ordinary item held together, a second of either refused;\n- update_item clear_not_before making a held item ready;\n- an offline read served stale, and an offline write refused with E_OFFLINE;\n- final validate counts, and every state commit authored by `tractable <tractable@localhost>` with a `todo(` subject.\n\nGuardrails:\n- The harness writes only to a bare remote it created under a fresh temp directory.\n- It runs from a temp directory with --repo-root pointed there and unsets TRACTABLE_* variables, so it can never discover a real .tractable/config.json or remote.\n- No network access; it removes its temp directory on exit, including on failure.\n- CI never touches a real state branch.",
   "links": [
     "docs/operations/release-gates.md",
@@ -36,6 +37,14 @@
       "generation": "c375589948864c34a883085e446ae8a4",
       "op": "take",
       "op_id": "7c99a2ca5a7448ca985b3093c40359d8",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T21:19:40Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "ff3e3e0f26e345cd900ac070ee421601",
       "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
     }
   ]
