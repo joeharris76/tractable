@@ -5,6 +5,7 @@
     "skill-sync apply, verify and check pass for the three global targets at that revision, and ~/.claude/skills/todo/SKILL.md no longer contains the word substring.",
     "BenchBox develop's skill mirror is regenerated at that revision through its sync command, in a merged PR."
   ],
+  "context": "2026-11-14 done.\n- Catalog: https://github.com/joeharris76/skill-sync-skills/pull/124 squash-merged as e04b1a717c6e4c5f341115166281e9398f27f951. skills/todo/SKILL.md 4.0.0 -> 4.1.0: expect_store described as whole trailing repository path segments (case-insensitive; owner/repo, bare name or URL, with or without .git); update_item clear_not_before=true documented for 1.1.1+, with not_before=\"\" still valid and the combination with a non-empty not_before refused; new critical rule comparing tractable_batch.tool_version (or serverInfo.version) with the project's pinned runtime and making no tracker writes if the server is older. Repo tests: Ran 30 tests OK (skipped=1); Template gate and wrapper cycle and the SkillSpector scan passed.\n- Global pin: https://github.com/joeharris76/skill-sync-skills/pull/125 squash-merged as e50bb2e; only the main catalog group's rev moved (6497b59 -> e04b1a7). ~/.skill-sync-deployment/skill-sync.conf matches origin/main (diff empty). Wrapper apply: \"Applied 9 change(s).\"; verify: \"Verified 3 target(s) against skill-sync.manifest.\"; check: \"Already up to date.\" ~/.claude, ~/.codex and ~/.agents todo/SKILL.md: version 4.1.0, no \"substring\", clear_not_before and tool_version present.\n- BenchBox mirror: https://github.com/BenchBox-dev/benchbox/pull/4234 merged as 949f560 (oracle SHIP, required checks green); both catalog groups moved a315616 -> e04b1a7 via make skill-sync. Retiring tidy-perms from BenchBox's config was required because the catalog removed it in #118. BenchBox develop .claude/skills/todo/SKILL.md is 4.1.0 with no \"substring\".",
   "description": "Defect in the shared todo skill (joeharris76/skill-sync-skills, skills/todo/SKILL.md; catalog main 92bd9cf and the deployed global mirrors).\n- It says expect_store is \"a case-insensitive substring of the remote only\". Since tractable 1.1.1 (#73) the server compares whole trailing repository path segments, case-insensitively, and accepts owner/repo, a bare repository name or a full URL.\n- It never mentions update_item clear_not_before=true, added in 1.1.1 for clients that drop empty-string arguments; it documents only not_before=\"\".\n- Nothing tells an agent that a long-running server keeps the code it started with. Observed 2026-11-13: a BenchBox server started at 08:16 from _project/scripts/.venv still ran 1.1.0 (and accepted the prefix BenchBox-dev/Bench) because the venv moved to 1.1.1 four minutes later.\n\nDecision (owner, 2026-11-14):\n- Fix all three in the catalog. The version check: after get_instructions, compare tractable_batch.tool_version from the server with the project's pinned runtime (in a vendoring project, the wheel under its vendor directory); if the server is older, stop tracker writes and ask the operator to restart the session.\n- Then move the global deployment pin (deployment/global/skill-sync.conf on main and ~/.skill-sync-deployment/skill-sync.conf) and run skill-sync apply, verify and check.\n- Re-pin only BenchBox's skill mirror now, because its open item tractable-expect-store-substring-match-20261112 requires the mirror. Other projects pick the change up at their next routine skill bump.\n\nGuardrails:\n- The skill keeps \"requires tractable 1.0.0 or later\"; 1.1.1-only features say so where they are described.\n- No other skill text changes.\n- The catalog PR is squash-merged from a worktree; the owner's uncommitted or conflicted files in ~/Developer/skill-sync-skills are not touched.\n- Skill mirrors are never hand-edited; they change only by sync.",
   "links": [
     "https://github.com/joeharris76/tractable/pull/73",
@@ -27,6 +28,14 @@
       "generation": "afa17c66b3304dddb948ccc74f387247",
       "op": "take",
       "op_id": "45df96ebeedd4226a0e7c46ac5f3e1e2",
+      "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:d00ba1f00cbfbf7605020e68",
+      "at": "2026-11-14T22:12:35Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "fe24edc57af44aefadf9406874be5940",
       "session_id": "fe2b091bbbdc42abb8991f9365155dc5"
     }
   ]
