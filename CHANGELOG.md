@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-17
+
 ### Added
 
 - `tractable-mcp` warns when the installed package version differs from the one
