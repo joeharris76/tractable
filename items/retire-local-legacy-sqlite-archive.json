@@ -3,6 +3,7 @@
     "The owner's choice is recorded here.",
     "`git -C ~/Developer/tractable status --porcelain` no longer lists .todo-db/, and the files are deleted, moved to the recorded location (sizes listed here), or excluded, as chosen."
   ],
+  "context": "2026-11-17 owner decision: (a) delete. Before deleting, `git grep` found no reference to the archive files (one CHANGELOG line names the old default path `.todo-db/standalone.sqlite`, not these files) and no open item cites them. Deleted, unopened and uncommitted: replica.db.lock (0 B), standalone.sqlite.retired-20260910 (1,167,360 B), todo.sqlite.legacy-schema-20260721 (274,432 B), turso-replica.db (32,768 B), turso-replica.db-info (69 B), turso-replica.db-shm (32,768 B), turso-replica.db-wal (0 B), turso-replica.db.lock (0 B); then the empty .todo-db/ directory. `git status --porcelain` in ~/Developer/tractable is now empty.",
   "description": "Leftover. ~/Developer/tractable/.todo-db/archive/ (2.4 MB, untracked, unchanged since September) holds the pre-0.7 database files: standalone.sqlite.retired-20260910, todo.sqlite.legacy-schema-20260721, turso-replica.db with its -shm, -wal and -info files, and an empty replica.db.lock. It is the last `.todo-db` path in this checkout and shows as `?? .todo-db/` in every git status. The files may contain old task text and, for the Turso replica, connection metadata, so they must never be committed.\n\nDecision gate (owner): one of (a) delete it, since the JSON/Git state branch is the record and 0.7.0 migrated from exports, (b) move it outside every repository (for example ~/.tractable/archive/tractable/) and keep it, or (c) keep it in place and add `.todo-db/` to .git/info/exclude so it stops showing. Recommendation: (b), because it keeps the files without leaving them in a working tree.\n\nGuardrails:\n- Never commit, push or upload these files, and never add them to .gitignore in a commit that names their contents.\n- Before deleting (option a), confirm that no open item or doc refers to them as evidence.\n- Do not open or modify the database files.",
   "sessions": [
     {
@@ -20,6 +21,14 @@
       "generation": "d298017a866d4a17baef0a3311b63606",
       "op": "take",
       "op_id": "de139ca62ee04d0c89ec1af6bc757ffc",
+      "session_id": "cb14dda615f447d68d7c1461ea8345ec"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:be9c9f537c712cb3a0896b2c",
+      "at": "2026-11-17T14:01:53Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "f7bdbd3ac4ff439ea8e13fcceb137216",
       "session_id": "cb14dda615f447d68d7c1461ea8345ec"
     }
   ]
