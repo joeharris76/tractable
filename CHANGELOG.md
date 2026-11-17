@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `tractable-mcp` warns when the installed package version differs from the one
+  it started with (for example after `uv tool upgrade tractable` or a project
+  `uv run --locked` sync). `get_instructions` opens with a `## Server out of
+  date` section and write responses carry a top-level `warnings` list; both name
+  the running and installed versions and say to restart the session. Nothing is
+  refused, and an unreadable installed version gives no warning.
+
 ## [1.1.1] - 2026-11-11
 
 ### Added

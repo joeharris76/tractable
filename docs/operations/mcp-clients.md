@@ -226,6 +226,15 @@ from the client's documentation.
 - The process command line (`ps -axo command | grep tractable-mcp`) shows which
   binary was launched: a project venv path or the global tool.
 
+A long-running server keeps the code it loaded, but the package on disk can
+change under it (`uv tool upgrade tractable`, or a project `uv run --locked`
+syncing a new wheel). The server re-reads its installed version (cached for a
+few seconds). When it differs from the version it started with,
+`get_instructions` opens with a `## Server out of date` section and every write
+response carries a top-level `warnings` list naming both versions and asking you
+to restart the session. The server is not blocked. If the installed version
+cannot be read, no warning is shown.
+
 `expect_store` on `get_instructions` confirms the **store** the server is bound
 to, not its version: two different `tractable-mcp` versions bound to the same
 remote both pass it. Check the version separately, as above.
