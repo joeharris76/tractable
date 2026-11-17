@@ -1,0 +1,24 @@
+{
+  "acceptance": [
+    "A test replaces the installed distribution's version metadata after the server starts and shows the chosen behaviour: get_instructions names the running and installed versions and says to restart (and, for option (b), a write is refused with the documented gate code while a read succeeds).",
+    "A test shows no warning when the versions match and none when the metadata cannot be read.",
+    "The decision (a or b) and the owner's confirmation are recorded here before merge; CHANGELOG and docs/operations/mcp-clients.md describe the behaviour.",
+    "Gate 1 harness (scripts/release_gate1.py) gains a check for it and stays green in CI."
+  ],
+  "description": "Gap. A long-running tractable-mcp keeps the code it started with, but the package on disk can change under it: `uv tool upgrade tractable`, or a project's `uv run --locked` syncing a new vendored wheel into its venv. Observed 2026-11-13: a BenchBox server started at 08:16 still ran 1.1.0 (and accepted the prefix expect_store \"BenchBox-dev/Bench\") because the venv moved to 1.1.1 at 08:20. The same happened to the global servers after the 1.1.1 upgrade on 2026-11-12. The todo skill 4.1.0+ now tells agents to compare tractable_batch.tool_version with the project's pinned runtime, but that is a manual check that needs the agent to know the pin. The server can detect the simplest case itself: its own installed distribution version (importlib.metadata, read fresh) differs from the version it loaded at startup.\n\nDecision gate (implementer proposes, owner confirms before merge): when the versions differ, either (a) get_instructions and every write response carry a warning naming both versions and the restart instruction, or (b) writes are refused with a gate-kind code until restart while reads keep working. Recommendation to weigh: (a) first, because a mixed-version server is not known to corrupt state and (b) can strand a session mid-claim.\n\nGuardrails:\n- No state-schema change and no change to claim or publication semantics.\n- The check reads only the server's own installed metadata; it never inspects other processes or projects' pins.\n- Its cost stays negligible per call (cache the result for a short interval, at most one metadata read per few seconds).\n- A missing or unreadable metadata entry yields no warning, never a refusal.",
+  "links": [
+    "scripts/release_gate1.py",
+    "docs/operations/mcp-clients.md",
+    "BenchBox: tractable-expect-store-substring-match-20261112"
+  ],
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:be9c9f537c712cb3a0896b2c",
+      "at": "2026-11-17T13:51:43Z",
+      "client": "omp-coding-agent",
+      "op": "create",
+      "op_id": "c60c35dfc6124b8ea8e5b4d5e4ad1ee2",
+      "session_id": "cb14dda615f447d68d7c1461ea8345ec"
+    }
+  ]
+}

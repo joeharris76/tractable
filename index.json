@@ -859,6 +859,13 @@
       "status": "done",
       "title": "Schedule audit verify + doctor; define mechanical alert channel"
     },
+    "server-reports-replaced-installation": {
+      "claim": null,
+      "needs": [],
+      "priority": "medium",
+      "status": "open",
+      "title": "Make a running server report when its installed package was replaced underneath it"
+    },
     "session-history-docs-tests": {
       "claim": null,
       "needs": [
