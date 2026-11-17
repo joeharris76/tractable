@@ -5,7 +5,7 @@
     "The decision (a or b) and the owner's confirmation are recorded here before merge; CHANGELOG and docs/operations/mcp-clients.md describe the behaviour.",
     "The full test suite and the release-gate1 CI job stay green; the harness itself is not required to simulate a replaced installation."
   ],
-  "context": "2026-11-17 owner decision: option (a), warn. get_instructions and every write response name the running and installed versions and say to restart; no refusal. Merge to main only; no release now, it ships with the next release.",
+  "context": "2026-11-17 owner decision: option (a), warn. get_instructions and every write response name the running and installed versions and say to restart; no refusal. Merge to main only; no release now, it ships with the next release.\n\n2026-11-17 done in https://github.com/joeharris76/tractable/pull/76 (merge 5da9eb4, head 04b6f04; CI test (3.10), test (3.13), release-gate1 green; not released, per the owner's decision). New src/tractable/mcp/staleness.py compares TOOL_VERSION (loaded at startup) with a fresh importlib.metadata.version(\"tractable\"), cached 5 s; any lookup exception means no warning. On a mismatch get_instructions (tool, resource and prompt) starts with `## Server out of date`, naming both versions and \"Restart the session to load the installed version.\", and all 17 write tools return a top-level `warnings` list; reads are unchanged. Tool signatures unchanged, so the schema snapshot and token ceilings are unchanged. Tests (tests/test_mcp_stale_install.py): test_warns_when_installed_version_differs (installed 99.0.0 after start: get_instructions names both versions with the restart text, create_item carries warnings, list_items does not); test_no_warning_when_versions_match; test_no_warning_when_lookup_fails over PackageNotFoundError, OSError and ValueError. Full suite 510 passed; ruff clean. CHANGELOG [Unreleased] entry and a paragraph in docs/operations/mcp-clients.md under \"Confirming what a session runs\". Owner confirmation of option (a) recorded 2026-11-17 before merge.",
   "description": "Gap. A long-running tractable-mcp keeps the code it started with, but the package on disk can change under it: `uv tool upgrade tractable`, or a project's `uv run --locked` syncing a new vendored wheel into its venv. Observed 2026-11-13: a BenchBox server started at 08:16 still ran 1.1.0 (and accepted the prefix expect_store \"BenchBox-dev/Bench\") because the venv moved to 1.1.1 at 08:20. The same happened to the global servers after the 1.1.1 upgrade on 2026-11-12. The todo skill 4.1.0+ now tells agents to compare tractable_batch.tool_version with the project's pinned runtime, but that is a manual check that needs the agent to know the pin. The server can detect the simplest case itself: its own installed distribution version (importlib.metadata, read fresh) differs from the version it loaded at startup.\n\nDecision gate (implementer proposes, owner confirms before merge): when the versions differ, either (a) get_instructions and every write response carry a warning naming both versions and the restart instruction, or (b) writes are refused with a gate-kind code until restart while reads keep working. Recommendation to weigh: (a) first, because a mixed-version server is not known to corrupt state and (b) can strand a session mid-claim.\n\nGuardrails:\n- No state-schema change and no change to claim or publication semantics.\n- The check reads only the server's own installed metadata; it never inspects other processes or projects' pins.\n- Its cost stays negligible per call (cache the result for a short interval, at most one metadata read per few seconds).\n- A missing or unreadable metadata entry yields no warning, never a refusal.",
   "links": [
     "scripts/release_gate1.py",
@@ -44,6 +44,14 @@
       "generation": "0c71d671f64a4d0892ff9b22dc67a0d3",
       "op": "take",
       "op_id": "86682d6c63ab4f64ac22f0d3fa0801c0",
+      "session_id": "cb14dda615f447d68d7c1461ea8345ec"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:be9c9f537c712cb3a0896b2c",
+      "at": "2026-11-17T14:23:38Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "091bc155da1848a790ba39bf619767af",
       "session_id": "cb14dda615f447d68d7c1461ea8345ec"
     }
   ]
