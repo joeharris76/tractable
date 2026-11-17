@@ -867,15 +867,10 @@
       "title": "Schedule audit verify + doctor; define mechanical alert channel"
     },
     "server-reports-replaced-installation": {
-      "claim": {
-        "expires_at": "2026-11-18T14:23:27Z",
-        "generation": "0c71d671f64a4d0892ff9b22dc67a0d3",
-        "renewals": 0,
-        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:be9c9f537c712cb3a0896b2c"
-      },
+      "claim": null,
       "needs": [],
       "priority": "medium",
-      "status": "active",
+      "status": "done",
       "title": "Make a running server report when its installed package was replaced underneath it"
     },
     "session-history-docs-tests": {
