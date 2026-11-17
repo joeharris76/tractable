@@ -26,6 +26,7 @@ from ..errors import E_STATE
 from ..service import err
 from .identity import PrincipalHolder
 from .instructions import render_instructions
+from .staleness import instructions_banner
 from .target import ResolvedTarget
 
 _RESOURCE_URI = "tractable://instructions"
@@ -99,7 +100,8 @@ def register_instructions(
             LOG.info("principal: %s (derived from initialize clientInfo)", pinned)
 
     def _render() -> str:
-        return render_instructions(target, principal.principal if principal is not None else None)
+        text = render_instructions(target, principal.principal if principal is not None else None)
+        return instructions_banner() + text
 
     @server.resource(
         _RESOURCE_URI,

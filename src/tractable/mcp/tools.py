@@ -20,6 +20,7 @@ from mcp.server.fastmcp import Context, FastMCP
 
 from ..errors import E_NO_PRINCIPAL, E_STATE
 from ..service import TrackerService, err, resolve_payload
+from .staleness import with_warnings
 from .identity import PrincipalHolder, sanitize_client_name
 from .target import ResolvedTarget
 
@@ -111,6 +112,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         name="create_item",
         description="Create a task, optionally as a registered batch member.",
     )
+    @with_warnings
     async def create_item_tool(
         id: str,
         title: str,
@@ -142,6 +144,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "is fixed here and required for later develop-merge advances."
         ),
     )
+    @with_warnings
     async def register_batch_tool(
         batch_id: str,
         project_id: str,
@@ -182,6 +185,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "adds a note to the end of the current context and keeps concurrent notes; not with context."
         ),
     )
+    @with_warnings
     async def update_item_tool(
         id: str,
         title: str | None = None,
@@ -238,6 +242,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "batch are reserved to the batch owner (E_BATCH_OWNER)."
         ),
     )
+    @with_warnings
     async def take_tool(
         id: str,
         ctx: Context = None,  # type: ignore[assignment]
@@ -256,6 +261,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "transfer is audited under your session."
         ),
     )
+    @with_warnings
     async def takeover_tool(
         id: str,
         expected_holder: str,
@@ -272,6 +278,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         name="release",
         description="Release a claim by generation without finishing.",
     )
+    @with_warnings
     async def release_tool(
         id: str,
         generation: str,
@@ -291,6 +298,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "verification_path, an absolute path to a JSON file holding it."
         ),
     )
+    @with_warnings
     async def prepare_tool(
         id: str,
         generation: str,
@@ -337,6 +345,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "repository, number and node id only; an exact retry is idempotent."
         ),
     )
+    @with_warnings
     async def bind_batch_pr_tool(
         batch_id: str,
         owner_generation: str,
@@ -363,6 +372,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "expected_head is compare-and-swap; reason is fix or develop-merge."
         ),
     )
+    @with_warnings
     async def advance_batch_head_tool(
         batch_id: str,
         owner_generation: str,
@@ -390,6 +400,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "to relocate the integration checkout."
         ),
     )
+    @with_warnings
     async def recover_batch_owner_tool(
         batch_id: str,
         expected_owner: str,
@@ -434,6 +445,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         name="abort_batch",
         description="Abort a claim-free active batch and recover its members.",
     )
+    @with_warnings
     async def abort_batch_tool(
         batch_id: str,
         owner_generation: str,
@@ -452,6 +464,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "inline as final_evidence or as final_evidence_path, an absolute path to a JSON file."
         ),
     )
+    @with_warnings
     async def finish_tool(
         id: str,
         generation: str,
@@ -475,6 +488,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         name="renew",
         description="Extend a long-running claim. Same generation, no progress milestones required.",
     )
+    @with_warnings
     async def renew_tool(
         id: str,
         generation: str,
@@ -494,6 +508,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "Unclaimed tasks drop freely; a live claim needs its generation."
         ),
     )
+    @with_warnings
     async def drop_tool(
         id: str,
         reason: str,
@@ -533,6 +548,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "200 characters at most; done or dropped tasks refuse deferrals."
         ),
     )
+    @with_warnings
     async def defer_tool(
         id: str,
         summary: str,
@@ -555,6 +571,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             "first and link it with to_item."
         ),
     )
+    @with_warnings
     async def promote_deferral_tool(
         id: str,
         deferral_id: int,
@@ -580,6 +597,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         name="dismiss_deferral",
         description="Resolve an open deferral as deliberately dropped, with a reason.",
     )
+    @with_warnings
     async def dismiss_deferral_tool(
         id: str,
         deferral_id: int,
