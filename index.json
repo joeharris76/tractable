@@ -853,10 +853,15 @@
       "title": "restore-legacy: carry the findings domain and reject unknown tables"
     },
     "retire-local-legacy-sqlite-archive": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-18T14:01:45Z",
+        "generation": "d298017a866d4a17baef0a3311b63606",
+        "renewals": 0,
+        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:be9c9f537c712cb3a0896b2c"
+      },
       "needs": [],
       "priority": "low",
-      "status": "open",
+      "status": "active",
       "title": "Decide what to do with the untracked legacy SQLite/Turso archive in the tractable checkout"
     },
     "schedule-detection-and-alerting": {
