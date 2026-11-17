@@ -213,9 +213,13 @@ that (compared by whole path segment, ignoring case and `.git`) is refused with 
   acceptance is confirmed.
 - Competing pushes re-apply the operation against the new tip. Conflicting
   edits fail instead of silently overwriting.
-- Every mutation carries a unique operation ID (a `Todo-Op-Id` commit
-  trailer). A lost reply reconciles by operation ID without duplicating
-  the change; an undetermined outcome is reported as unknown/retryable.
+- Every mutation carries an operation ID (a `Todo-Op-Id` commit trailer).
+  A lost reply reconciles by operation ID without duplicating the change;
+  an undetermined outcome is reported as unknown/retryable. Every MCP write
+  accepts a client-chosen `operation_id` (32 hex characters): repeating the
+  call with the same value after a client timeout returns the original
+  acknowledgement with `duplicate: true` and applies nothing a second time.
+  The commit records the acknowledgement in a `Todo-Ack` trailer.
 - Offline reads may serve a cached revision marked stale. Offline
   mutations fail rather than succeeding locally.
 - `tractable-mcp` starts offline from a cached revision when the state remote

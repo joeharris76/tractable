@@ -69,6 +69,12 @@ the blocking ids); `show_item` reports them as `open_deferrals`.
 
 `not_before` (future RFC 3339) holds an open task until then; `""` clears (or `clear_not_before`).
 
+Every write accepts `operation_id` (32 hex chars). Generate one per
+write before calling. If a call times out or returns `E_UNKNOWN`, repeat it
+unchanged with the same `operation_id`: a landed write returns its original
+acknowledgement (`duplicate`) and is never applied twice. A new write needs a
+new id.
+
 ## Session history
 
 Mutations record actor, session, operation, and operation ID per task.
@@ -108,7 +114,8 @@ revision.
 - `E_OVERSIZED` -- one field exceeds the cap. Use its section read.
 - `E_OFFLINE` -- remote unreachable. Reads may be cached (marked
   stale); mutations fail rather than succeeding locally.
-- `E_UNKNOWN` -- outcome undetermined; reconcile with the operation ID.
+- `E_UNKNOWN` -- outcome undetermined. Retry the same call with the same
+  `operation_id`; it never applies twice.
 - `E_NO_PRINCIPAL` -- call `get_instructions`, then retry.
 
 One server instance is one logical worker. Default identities are isolated per

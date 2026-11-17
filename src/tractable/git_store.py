@@ -53,6 +53,10 @@ SLACK_CAP_BYTES = 8 * 1024 * 1024
 HARD_SLACK_CAP_BYTES = 2 * SLACK_CAP_BYTES
 MAINTENANCE_INTERVAL_S = 600
 MAINTENANCE_RETRY_S = 60
+# Longest a read or write waits for the exclusive maintenance lock before it
+# fails with nothing changed. A client times out at 30 s; waiting past that
+# only leaves an operation of unknown outcome.
+LOCK_WAIT_S = 20.0
 STALE_STAGING_S = 3600
 MIN_GIT_VERSION = (2, 28)
 PRUNE_EXPIRE = "1.hour.ago"
@@ -197,6 +201,10 @@ class StoreError(Exception):
     """A local store command failed; the store may be damaged."""
 
 
+class StoreBusy(TodoError):
+    """The store stayed locked by maintenance; the caller changed nothing."""
+
+
 def _brief(text: str, limit: int = 300) -> str:
     text = " ".join(str(text).strip().split())
     return text if len(text) <= limit else text[:limit] + "…"
@@ -284,12 +292,15 @@ class Store:
             return ""
 
     @contextmanager
-    def _flock(self, name: str, mode: int, blocking: bool = True) -> Iterator[bool]:
+    def _flock(
+        self, name: str, mode: int, blocking: bool = True, wait_s: float | None = None,
+    ) -> Iterator[bool]:
         """Lock ``<ns>/<name>``, retrying if the file was replaced meanwhile.
 
         `cache prune` renames a whole namespace away while holding its
         lock. A process that was waiting then holds a lock on the moved
-        file, so it reopens the path and locks again.
+        file, so it reopens the path and locks again. With *wait_s*, a
+        blocking lock gives up after that many seconds with :class:`StoreBusy`.
         """
         if fcntl is None:
             yield True
@@ -299,11 +310,17 @@ class Store:
             self.ns.mkdir(parents=True, exist_ok=True)
             fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
             try:
-                fcntl.flock(fd, mode | (0 if blocking else fcntl.LOCK_NB))
+                if blocking and wait_s is not None:
+                    self._lock_within(fd, mode, wait_s)
+                else:
+                    fcntl.flock(fd, mode | (0 if blocking else fcntl.LOCK_NB))
             except BlockingIOError:
                 os.close(fd)
                 yield False
                 return
+            except StoreBusy:
+                os.close(fd)
+                raise
             try:
                 current = os.stat(path).st_ino == os.fstat(fd).st_ino
             except OSError:
@@ -316,14 +333,34 @@ class Store:
         finally:
             os.close(fd)
 
+    @staticmethod
+    def _lock_within(fd: int, mode: int, wait_s: float) -> None:
+        deadline = time.monotonic() + wait_s
+        delay = 0.01
+        while True:
+            try:
+                fcntl.flock(fd, mode | fcntl.LOCK_NB)
+                return
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise StoreBusy(
+                        f"the local state cache stayed locked for {wait_s:g}s (maintenance is repacking it); "
+                        "nothing was changed",
+                        code=E_STATE,
+                        recovery=["retry the call"],
+                    ) from None
+                time.sleep(delay)
+                delay = min(delay * 2, 0.25)
+
     @contextmanager
     def using(self) -> Iterator[None]:
         """Hold the shared lock for ordinary reads and writes.
 
         The store is created under the lock if it is missing, so a holder
-        never sees a namespace without a repository.
+        never sees a namespace without a repository. Waits at most
+        :data:`LOCK_WAIT_S` for maintenance to release it.
         """
-        with self._flock(LOCK_NAME, fcntl.LOCK_SH if fcntl else 0):
+        with self._flock(LOCK_NAME, fcntl.LOCK_SH if fcntl else 0, wait_s=LOCK_WAIT_S):
             # The lock file's mtime records last use, for `cache prune`.
             try:
                 os.utime(self.ns / LOCK_NAME)

@@ -50,6 +50,7 @@ def _client_name(ctx: Context | None) -> str | None:
 
 def _service(
     target: ResolvedTarget, worker: str, holder: PrincipalHolder, ctx: Context | None,
+    operation_id: str = "",
 ) -> TrackerService:
     return TrackerService(
         ref=target.state_ref,
@@ -57,6 +58,7 @@ def _service(
         worker=worker,
         session_id=holder.session_id,
         client_name=_client_name(ctx),
+        operation_id=operation_id or None,
     )
 
 
@@ -124,12 +126,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         context: str = "",
         batch: dict[str, Any] | None = None,
         not_before: str = "",
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(
             svc.create_item, id, title, priority=priority, description=description,
             needs=needs or [], acceptance=acceptance or [], links=links or [], context=context, batch=batch,
@@ -160,12 +163,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         terminal_outcome: str,
         develop_ref: str | None = None,
         confirm_schema3_cutover: bool = False,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(
             svc.register_batch,
             batch_id=batch_id, project_id=project_id, repository=repository,
@@ -200,6 +204,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         status: str | None = None,
         not_before: str | None = None,
         clear_not_before: bool = False,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
@@ -209,7 +214,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             return err(E_STATE, "pass not_before or clear_not_before, not both")
         if clear_not_before:
             not_before = ""
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         kwargs: dict[str, Any] = {}
         if title is not None:
             kwargs["title"] = title
@@ -245,12 +250,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
     @with_warnings
     async def take_tool(
         id: str,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.take, id)
 
     @server.tool(
@@ -266,12 +272,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         id: str,
         expected_holder: str,
         reason: str,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.takeover, id, expected_holder, reason)
 
     @server.tool(
@@ -282,12 +289,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
     async def release_tool(
         id: str,
         generation: str,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.release, id, generation)
 
     @server.tool(
@@ -313,6 +321,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         verification: dict[str, Any] | None = None,
         verification_path: str | None = None,
         implementation_dependencies: list[str] | None = None,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
@@ -321,7 +330,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         verification, refusal = await asyncio.to_thread(resolve_payload, "verification", verification, verification_path)
         if refusal is not None:
             return refusal
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(
             svc.prepare,
             id,
@@ -354,12 +363,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         node_id: str,
         head: str,
         expected_previous_head: str | None = None,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(
             svc.bind_batch_pr, batch_id, owner_generation, pr_repository=pr_repository, number=number,
             node_id=node_id, head=head, expected_previous_head=expected_previous_head,
@@ -380,12 +390,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         head: str,
         reason: str,
         changed_files: list[str],
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(
             svc.advance_batch_head, batch_id, owner_generation, expected_head=expected_head,
             head=head, reason=reason, changed_files=changed_files,
@@ -410,12 +421,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         expected_integration_worktree: str | None = None,
         expected_integration_head: str | None = None,
         integration_worktree: str | None = None,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(
             svc.recover_batch_owner, batch_id, expected_owner, expected_owner_generation,
             new_owner_generation, reason,
@@ -449,12 +461,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
     async def abort_batch_tool(
         batch_id: str,
         owner_generation: str,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.abort_batch, batch_id, owner_generation)
 
     @server.tool(
@@ -470,6 +483,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         generation: str,
         final_evidence: dict[str, Any] | None = None,
         final_evidence_path: str | None = None,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
@@ -481,7 +495,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             )
             if refusal is not None:
                 return refusal
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.finish, id, generation, final_evidence)
 
     @server.tool(
@@ -492,12 +506,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
     async def renew_tool(
         id: str,
         generation: str,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.renew, id, generation)
 
     @server.tool(
@@ -513,12 +528,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         id: str,
         reason: str,
         generation: str | None = None,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.drop, id, reason=reason, generation=generation)
 
     @server.tool(
@@ -553,12 +569,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         id: str,
         summary: str,
         reason: str,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.defer_item, id, summary, reason)
 
     @server.tool(
@@ -578,12 +595,13 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         to_item: str | None = None,
         title: str | None = None,
         priority: str = "medium",
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(
             svc.promote_deferral,
             id,
@@ -602,10 +620,11 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         id: str,
         deferral_id: int,
         reason: str,
+        operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
         worker = _need_principal(holder, ctx)
         if not isinstance(worker, str):
             return worker
-        svc = _service(target, worker, holder, ctx)
+        svc = _service(target, worker, holder, ctx, operation_id)
         return await asyncio.to_thread(svc.dismiss_deferral, id, deferral_id, reason)

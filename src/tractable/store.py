@@ -113,6 +113,13 @@ FORBIDDEN_BREAKS = frozenset({"\x85", "\u2028", "\u2029"})  # NEL, LS, PS
 
 def _has_forbidden_breaks(text: str) -> bool:
     return any(char in FORBIDDEN_BREAKS for char in text)
+
+
+_CONTROL_OR_BREAK_RE = re.compile(r"[\x00-\x1f\x85\u2028\u2029]")
+
+
+def _has_control_or_break(text: str) -> bool:
+    return _CONTROL_OR_BREAK_RE.search(text) is not None
 DEFAULT_TTL_HOURS = 24.0
 MAX_TTL_HOURS = 72.0
 
@@ -196,8 +203,7 @@ def _validate_sessions(item_id: str, sessions: Any) -> None:
             not isinstance(op, str)
             or not op.strip()
             or len(op) > MAX_OP_LEN
-            or any(ord(char) < 32 for char in op)
-            or _has_forbidden_breaks(op)
+            or _has_control_or_break(op)
         ):
             raise TodoError(
                 f"sessions log for {item_id!r} entry {pos} has an invalid operation",
@@ -413,7 +419,7 @@ def validate_worker(worker: str) -> str:
     # protocol lines. Single line, no control characters — and no Unicode
     # line/paragraph separators, which pass the control check but still
     # split lines for trailer parsing.
-    if any(ord(char) < 32 for char in cleaned) or _has_forbidden_breaks(cleaned):
+    if _has_control_or_break(cleaned):
         raise TodoError("worker identity must be a single line without control characters", code=E_STATE)
     return cleaned
 
@@ -430,7 +436,7 @@ def validate_session_id(session: str) -> str:
     cleaned = session.strip()
     if len(cleaned) > MAX_SESSION_LEN:
         raise TodoError(f"session identity exceeds {MAX_SESSION_LEN} chars", code=E_STATE)
-    if any(ord(char) < 32 for char in cleaned) or _has_forbidden_breaks(cleaned):
+    if _has_control_or_break(cleaned):
         raise TodoError("session identity must be a single line without control characters", code=E_STATE)
     return cleaned
 
@@ -460,7 +466,7 @@ def validate_client_name(client: str) -> str:
     cleaned = client.strip()
     if len(cleaned) > MAX_CLIENT_LEN:
         raise TodoError(f"client name exceeds {MAX_CLIENT_LEN} chars", code=E_STATE)
-    if any(ord(char) < 32 for char in cleaned) or _has_forbidden_breaks(cleaned):
+    if _has_control_or_break(cleaned):
         raise TodoError("client name must be a single line without control characters", code=E_STATE)
     return cleaned
 
