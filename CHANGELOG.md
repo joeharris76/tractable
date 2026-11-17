@@ -14,6 +14,29 @@ adheres to [Semantic Versioning](https://semver.org/).
   date` section and write responses carry a top-level `warnings` list; both name
   the running and installed versions and say to restart the session. Nothing is
   refused, and an unreadable installed version gives no warning.
+- Every MCP write accepts an optional `operation_id` (32 hex characters). A
+  write that times out on the client can be repeated with the same id: if it
+  landed, the original acknowledgement comes back with `duplicate: true` and
+  nothing is applied a second time (`take` returns the same claim, `finish`
+  stays one finish, `context_append` appends once). The commit records the
+  acknowledgement in a `Todo-Ack` trailer. An id that names a different
+  operation or worker is refused. `E_UNKNOWN` recovery text and
+  `get_instructions` now say to retry with the same `operation_id`.
+- Each mutation logs its stage times (`lock`, `fetch`, `replay_search`,
+  `load`, `apply`, `tree`, `commit`, `push`, `confirm`) on the
+  `tractable.git` logger, at WARNING when it takes 10 seconds or more.
+
+### Changed
+
+- A read or write waits at most 20 seconds for the local cache lock that
+  background maintenance holds while repacking, then fails with `E_STATE`
+  (nothing changed, retry) instead of waiting out the repack and leaving the
+  client with an unknown outcome.
+- A write with a generated operation id no longer searches the branch history
+  for that id; only a client-supplied id or a retry does.
+- Session-history validation, run several times per write, checks control
+  characters with one regular expression, about 4 times faster on a 4,600-item
+  tracker.
 
 ## [1.1.1] - 2026-11-11
 

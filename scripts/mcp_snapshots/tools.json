@@ -11,6 +11,11 @@
         "owner_generation": {
           "title": "Owner Generation",
           "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -57,6 +62,11 @@
           },
           "title": "Changed Files",
           "type": "array"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -116,6 +126,11 @@
           ],
           "default": null,
           "title": "Expected Previous Head"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -225,6 +240,11 @@
           "default": "",
           "title": "Not Before",
           "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -255,6 +275,11 @@
         },
         "reason": {
           "title": "Reason",
+          "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
           "type": "string"
         }
       },
@@ -287,6 +312,11 @@
         },
         "reason": {
           "title": "Reason",
+          "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
           "type": "string"
         }
       },
@@ -328,6 +358,11 @@
           ],
           "default": null,
           "title": "Generation"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -380,6 +415,11 @@
           ],
           "default": null,
           "title": "Final Evidence Path"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -651,6 +691,11 @@
           ],
           "default": null,
           "title": "Implementation Dependencies"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -714,6 +759,11 @@
         "priority": {
           "default": "medium",
           "title": "Priority",
+          "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
           "type": "string"
         }
       },
@@ -790,6 +840,11 @@
           ],
           "default": null,
           "title": "Integration Worktree"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -886,6 +941,11 @@
           "default": false,
           "title": "Confirm Schema3 Cutover",
           "type": "boolean"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -923,6 +983,11 @@
         "generation": {
           "title": "Generation",
           "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -949,6 +1014,11 @@
         },
         "generation": {
           "title": "Generation",
+          "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
           "type": "string"
         }
       },
@@ -1085,6 +1155,11 @@
         "id": {
           "title": "Id",
           "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [
@@ -1114,6 +1189,11 @@
         },
         "reason": {
           "title": "Reason",
+          "type": "string"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
           "type": "string"
         }
       },
@@ -1286,6 +1366,11 @@
           "default": false,
           "title": "Clear Not Before",
           "type": "boolean"
+        },
+        "operation_id": {
+          "default": "",
+          "title": "Operation Id",
+          "type": "string"
         }
       },
       "required": [

@@ -191,6 +191,7 @@ class TrackerService:
     ttl_hours: float = S.DEFAULT_TTL_HOURS
     session_id: str | None = None
     client_name: str | None = None
+    operation_id: str | None = None
 
     def __post_init__(self) -> None:
         self.worker = S.validate_worker(self.worker)
@@ -677,7 +678,7 @@ class TrackerService:
         self, op: str, summary: str,
         apply: Callable[[S.Snapshot, str], dict[str, Any]],
     ) -> dict[str, Any]:
-        op_id = git_backend.new_op_id()
+        op_id = self.operation_id or git_backend.new_op_id()
 
         def bridged(snap: S.Snapshot) -> dict[str, Any]:
             return apply(snap, op_id)
@@ -685,7 +686,7 @@ class TrackerService:
         try:
             result = git_backend.mutate(
                 self.ref, op=op, summary=summary, worker=self.worker, op_id=op_id, apply=bridged,
-                session=self.session_id, cache_dir=self.cache_dir,
+                session=self.session_id, cache_dir=self.cache_dir, replay=bool(self.operation_id),
             )
         except TodoError as exc:
             return err(exc.code or E_STATE, str(exc), recovery=exc.recovery)
@@ -712,7 +713,11 @@ class TrackerService:
             return err(
                 E_UNKNOWN,
                 f"{result.error} (operation ID {result.op_id})",
-                recovery=[f"reconcile with operation ID {result.op_id}"],
+                recovery=[
+                    f"retry the same call with operation_id={result.op_id}: if it landed, the original "
+                    "outcome is returned and nothing is applied twice",
+                    f"or look the operation up with `tractable recover --op-id {result.op_id}`",
+                ],
             )
         if result.outcome == "offline":
             return err(E_OFFLINE, result.error or "remote unreachable", recovery=["retry when the remote is reachable"])

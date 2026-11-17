@@ -420,6 +420,8 @@ def test_startup_schema_cost_is_small(tmp_path: Path) -> None:
             # final_evidence_path arguments: 5,745 -> 5,907.
             # update_item's clear_not_before flag and the exact expect_store
             # wording: 5,907 -> 5,946.
-            assert tokens <= 5950, tokens
+            # The optional operation_id argument on all 17 write tools and
+            # its guidance paragraph: 5,946 -> 6,387.
+            assert tokens <= 6400, tokens
 
     anyio.run(go)

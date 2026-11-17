@@ -270,7 +270,7 @@ def test_takeover_retry_conflicts_on_changed_claim(tmp_path: Path, monkeypatch) 
     assert took["ok"], took
     holder_gen = took["data"]["claim"]["generation"]
 
-    def fake_mutate(ref, *, op, summary, worker, op_id, apply, max_retries=5, session=None, cache_dir=None):
+    def fake_mutate(ref, *, op, summary, worker, op_id, apply, max_retries=5, session=None, cache_dir=None, replay=None):
         first = git_backend.read(ref, tmp_path / "c1").snapshot
         apply(first)
         # The holder renews between our attempts: same worker, new image.
@@ -364,7 +364,7 @@ def test_update_retry_conflicts_on_touched_fields(tmp_path: Path, monkeypatch) -
     svc = _svc(tmp_path)
     assert svc.create_item("t", "v1")["ok"]
 
-    def fake_mutate(ref, *, op, summary, worker, op_id, apply, max_retries=5, session=None, cache_dir=None):
+    def fake_mutate(ref, *, op, summary, worker, op_id, apply, max_retries=5, session=None, cache_dir=None, replay=None):
         # First attempt records the pre-image; a competing writer changes
         # the same field before the retry is evaluated.
         first = git_backend.read(ref, tmp_path / "c1").snapshot

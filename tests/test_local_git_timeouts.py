@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import subprocess
 from pathlib import Path
 
@@ -72,7 +73,7 @@ def test_a_local_git_timeout_returns_a_coded_envelope(
     actions = {
         "list_items": lambda: service.list_items(),
         "show_item": lambda: service.show_item("seed"),
-        "create_item": lambda: service.create_item("created", "Created"),
+        "create_item": lambda: dataclasses.replace(service, operation_id="e" * 32).create_item("created", "Created"),
     }
     calls = _time_out_once(monkeypatch, command)
     _never_rebuild(monkeypatch)

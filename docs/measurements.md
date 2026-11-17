@@ -54,6 +54,54 @@ local git commands replace reading a few files, which is within the
 0.11 s recorded for 0.7.0. Seeding is one large commit and is dominated
 by validation and hashing, not the cache.
 
+## Write latency under host load
+
+Measured 2026-11-17 on a shared macOS host with no load added for the test
+(load average 86 to 369 from other sessions). The fixture was a bare remote
+cloned from the BenchBox state branch (4,605 items, 12,900+ commits) with an
+empty cache, so the remote is local disk and GitHub round trips are not
+included. Each of 8 cycles ran `create_item`, `take`, `update_item` with
+`context_append` and `finish`. With 8 samples the p95 equals the maximum.
+Stage times come from the `tractable.git` log line each write now emits.
+
+| Run (load average 1/5/15 min) | `take` p50 / p95 | `finish` p50 / p95 |
+| --- | --- | --- |
+| 1.1.1 (171/202/154) | 8.5 s / 13.5 s | 7.8 s / 26.6 s |
+| 1.1.1 (110/128/136) | 12.8 s / 18.2 s | 13.4 s / 52.8 s |
+| This change (369/294/228) | 8.2 s / 14.1 s | 9.0 s / 20.0 s, then 17.5 s on retry |
+
+The runs were back to back but the host load differed between them, so the
+rows show the size of the effect, not a controlled ratio.
+
+Where the time goes, from the stage log of 32 writes:
+
+- Network-shaped stages are small against a local remote: fetch about 0.15 s,
+  push about 0.2 s, the confirming `ls-remote` about 0.06 s. GitHub round
+  trips were not measured here and add to these.
+- Most of a write is local CPU over the whole tracker: loading the snapshot
+  (2 to 3 s), `apply` (1 to 5 s, mostly repeated `validate_snapshot`) and
+  `write_tree` (3 to 5 s, serializing every detail file). The Python part is
+  about 1.3 s of CPU on this fixture (validation 0.7 s, serialization 0.45 s,
+  parsing 0.15 s) before the git subprocesses, so under a load average above
+  100 each write sits at 8 to 19 s and a single descheduling pushes it past
+  30 s.
+- The tail is lock contention. Background cache maintenance (`repack -A`) holds
+  the store lock exclusively, and every read and write waits behind it (the
+  cache's `maintenance.stamp` was written during each run): one
+  `finish` waited 36 s for the lock (49 s in total). The 1.1.1 runs show the
+  same tail (a 52.8 s `finish`), but 1.1.1 logs no stage times to attribute it.
+  The write had not started when the client gave up, so nothing was lost, but
+  the client could not tell that from a lost reply.
+- A cold cache's first fetch of the whole history took 100 to 139 s.
+
+This change makes writes safe to repeat (`operation_id`), makes the lock wait
+end at 20 s with `E_STATE` and nothing changed instead of running past the
+client timeout, drops the history search for generated ids (about 0.3 s on
+this fixture) and cuts the control-character checks that dominated
+`validate_snapshot` (0.18 s to 0.05 s of CPU per validation, run four times
+per write). Serializing every detail file in `write_tree` (about 0.45 s of
+CPU) is unchanged.
+
 ## Local cache size
 
 Measured 2026-10-18 against BenchBox state (3,437 items, 5,100+

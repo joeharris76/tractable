@@ -17,11 +17,14 @@ the pure ``apply`` function runs again against the new tip, so a retry can
 only succeed when the operation is still valid, and conflicting edits to
 the same field fail as conflicts instead of silently overwriting.
 
-Reties are bounded (:data:`DEFAULT_MAX_RETRIES`). Every mutation carries a
-unique operation ID recorded as a ``Todo-Op-Id`` commit trailer, which is
-the durable acceptance record: a successful push with a lost reply is
+Retries are bounded (:data:`DEFAULT_MAX_RETRIES`). Every mutation carries an
+operation ID recorded as a ``Todo-Op-Id`` commit trailer, which is the
+durable acceptance record: a successful push with a lost reply is
 reconciled by searching the branch for the trailer, so the operation is
-never applied twice. If the outcome cannot be determined, the result is an
+never applied twice. A caller may supply the ID before the call; retrying
+with the same ID after a client timeout then replays the original outcome,
+which the commit records in a ``Todo-Ack`` trailer, instead of applying a
+second time. If the outcome cannot be determined, the result is an
 explicit unknown/retryable outcome preserving the operation ID.
 
 Offline reads may use a clearly identified cached revision. Offline
@@ -33,10 +36,13 @@ deletion invalidate its assumptions.
 from __future__ import annotations
 
 import hashlib
+import json
+import logging
 import re
 import shutil
 import subprocess
 import tempfile
+import time
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -45,11 +51,16 @@ from urllib.parse import urlsplit, urlunsplit
 from uuid import uuid4
 
 from .errors import E_CONFLICT, E_OFFLINE, E_STATE, E_UNKNOWN, TodoError
-from .git_store import Store, StoreError, run_git
+from .git_store import Store, StoreBusy, StoreError, run_git
 from .store import REVISION_RE, Snapshot, load_snapshot, validate_snapshot
 
 OP_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 MAX_STDERR_CHARS = 500
+ACK_TRAILER = "Todo-Ack"
+MAX_ACK_BYTES = 3000
+ACK_KEEP = ("id", "status", "claim", "changed", "generation", "expires_at")
+SLOW_MUTATION_S = 10.0
+LOG = logging.getLogger("tractable.git")
 
 
 def _brief(stderr: str, limit: int = MAX_STDERR_CHARS) -> str:
@@ -441,8 +452,36 @@ def reconcile(ref: StateRef, op_id: str, *, cache_dir: str | Path | None = None)
     return found
 
 
-def _commit_message(op: str, summary: str, op_id: str, worker: str, session: str | None = None) -> str:
-    subject = f"todo({op}): {summary}"[:200]
+def _subject(op: str, summary: str) -> str:
+    return f"todo({op}): {summary}"[:200]
+
+
+def _ack_trailer(ack: dict[str, Any]) -> str | None:
+    """The acknowledgement as one bounded JSON line, or None when it cannot ride along.
+
+    Oversized values are dropped largest first; the identity and claim
+    fields a retrying client needs are never dropped.
+    """
+    kept = {k: v for k, v in ack.items() if k != "_no_write"}
+
+    def size(value: dict[str, Any]) -> int:
+        return len(json.dumps(value, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+
+    try:
+        while kept and size(kept) > MAX_ACK_BYTES:
+            droppable = [k for k in kept if k not in ACK_KEEP]
+            if not droppable:
+                return None
+            del kept[max(droppable, key=lambda k: size({k: kept[k]}))]
+        return json.dumps(kept, separators=(",", ":"), sort_keys=True) if kept else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _commit_message(
+    op: str, summary: str, op_id: str, worker: str, session: str | None = None,
+    ack: dict[str, Any] | None = None,
+) -> str:
     body = f"{OP_ID_TRAILER}: {op_id}\nTodo-Actor: {worker}\n"
     if session:
         # Trailer values are single lines by construction: the service
@@ -450,7 +489,55 @@ def _commit_message(op: str, summary: str, op_id: str, worker: str, session: str
         # CLI validates its --session/TRACTABLE_SESSION the same way.
         safe = " ".join(str(session).split())
         body += f"{SESSION_TRAILER}: {safe}\n"
-    return f"{subject}\n\n{body}"
+    packed = _ack_trailer(ack) if isinstance(ack, dict) and ack else None
+    if packed is not None:
+        body += f"{ACK_TRAILER}: {packed}\n"
+    return f"{_subject(op, summary)}\n\n{body}"
+
+
+def _op_replay(clone: Path, sha: str, op: str, summary: str, worker: str) -> tuple[bool, dict[str, Any]]:
+    """Whether *sha* is the same operation by the same worker, and its recorded acknowledgement.
+
+    Only exact trailer lines count and the first of each wins, so text a
+    worker controls can never substitute another operation's outcome.
+    """
+    proc = _git(["show", "-s", "--format=%B", sha], clone)
+    if proc.returncode != 0:
+        raise StoreError(f"cannot read commit {sha}: {_brief(proc.stderr)}")
+    lines = proc.stdout.split("\n")
+    actor: str | None = None
+    ack: dict[str, Any] = {}
+    seen_ack = False
+    for line in lines[1:]:
+        if actor is None and line.startswith("Todo-Actor:"):
+            actor = line.split(":", 1)[1].strip()
+        elif not seen_ack and line.startswith(f"{ACK_TRAILER}: "):
+            seen_ack = True
+            try:
+                loaded = json.loads(line[len(ACK_TRAILER) + 2:])
+            except ValueError:
+                loaded = None
+            if isinstance(loaded, dict):
+                ack = loaded
+    return lines[0] == _subject(op, summary) and actor == worker, ack
+
+
+class _Stages:
+    """Wall time spent in each stage of one mutation, for the server log."""
+
+    def __init__(self) -> None:
+        self.seconds: dict[str, float] = {}
+
+    @contextmanager
+    def __call__(self, name: str) -> Iterator[None]:
+        start = time.perf_counter()
+        try:
+            yield
+        finally:
+            self.seconds[name] = self.seconds.get(name, 0.0) + time.perf_counter() - start
+
+    def render(self) -> str:
+        return " ".join(f"{name}={value:.2f}s" for name, value in self.seconds.items())
 
 
 def mutate(
@@ -464,6 +551,7 @@ def mutate(
     max_retries: int = DEFAULT_MAX_RETRIES,
     session: str | None = None,
     cache_dir: str | Path | None = None,
+    replay: bool | None = None,
 ) -> MutationOutcome:
     """Apply one logical operation and publish it. See module docstring.
 
@@ -472,20 +560,55 @@ def mutate(
     external side effects: it runs again on every retry, and retries never
     rerun verification commands or side effects (there are none to rerun).
 
+    A caller-supplied ``op_id`` makes the call replayable: when the branch
+    already holds that operation by the same worker, nothing is applied and
+    the original acknowledgement is returned with ``duplicate`` set.
+    Generated IDs cannot be in the history yet, so the history search runs
+    only when ``replay`` is true (default: whenever ``op_id`` is given) or
+    after a retry.
+
     The commit is built with Git plumbing in the shared object store: only
     changed files are hashed and no checkout is written.
     """
+    supplied = op_id is not None if replay is None else replay
     op_id = _check_op_id(op_id or new_op_id())
+    stages = _Stages()
+    started = time.perf_counter()
+    outcome = _mutate_stages(ref, op, summary, worker, op_id, apply, max_retries, session, cache_dir, supplied, stages)
+    total = time.perf_counter() - started
+    LOG.log(
+        logging.WARNING if total >= SLOW_MUTATION_S else logging.INFO,
+        "mutate op=%s op_id=%s outcome=%s total=%.2fs %s",
+        op, op_id, outcome.outcome, total, stages.render(),
+    )
+    return outcome
+
+
+def _mutate_stages(
+    ref: StateRef,
+    op: str,
+    summary: str,
+    worker: str,
+    op_id: str,
+    apply: Callable[[Snapshot], dict[str, Any]],
+    max_retries: int,
+    session: str | None,
+    cache_dir: str | Path | None,
+    supplied: bool,
+    stages: _Stages,
+) -> MutationOutcome:
     store = _store(ref, cache_dir)
     url = _remote_location(ref)
     try:
-        _open_store(store)
+        with stages("open"):
+            _open_store(store)
     except TodoError as exc:
         return MutationOutcome(ok=False, outcome="error", op_id=op_id, code=E_STATE, error=str(exc))
     try:
-        return _mutate_loop(store, ref, url, op, summary, worker, op_id, apply, session, max_retries)
+        return _mutate_loop(store, ref, url, op, summary, worker, op_id, apply, session, max_retries, supplied, stages)
     finally:
-        store.maybe_maintain()
+        with stages("maintain"):
+            store.maybe_maintain()
 
 
 def _mutate_loop(
@@ -499,14 +622,26 @@ def _mutate_loop(
     apply: Callable[[Snapshot], dict[str, Any]],
     session: str | None,
     max_retries: int,
+    supplied: bool,
+    stages: _Stages,
 ) -> MutationOutcome:
     repaired = False
     attempts = 0
     while True:
         progress: list[str] = []
+        replay = supplied or attempts > 0 or repaired
         try:
-            with store.using():
-                step = _mutate_once(store, ref, url, op, summary, worker, op_id, apply, session, progress)
+            with ExitStack() as held:
+                with stages("lock"):
+                    held.enter_context(store.using())
+                step = _mutate_once(
+                    store, ref, url, op, summary, worker, op_id, apply, session, progress, replay, stages,
+                )
+        except StoreBusy as exc:
+            return MutationOutcome(
+                ok=False, outcome="error", op_id=op_id, code=E_STATE,
+                error=f"{exc} (operation ID {op_id})", recovery=list(exc.recovery),
+            )
         except subprocess.TimeoutExpired as exc:
             return _local_timeout_outcome(exc, op_id, pushed=bool(progress))
         except StoreError as exc:
@@ -542,12 +677,16 @@ def _mutate_once(
     apply: Callable[[Snapshot], dict[str, Any]],
     session: str | None,
     progress: list[str] | None = None,
+    replay: bool = True,
+    stages: _Stages | None = None,
 ) -> MutationOutcome | None:
     """One fetch-apply-push attempt. None means a competing push won: retry."""
+    stages = stages or _Stages()
     timeout = _fetch_timeout(store)
     with ExitStack() as stack:
         try:
-            fetch, tip = stack.enter_context(store.incoming(url, ref.branch, timeout))
+            with stages("fetch"):
+                fetch, tip = stack.enter_context(store.incoming(url, ref.branch, timeout))
         except subprocess.TimeoutExpired:
             return MutationOutcome(
                 ok=False, outcome="offline", op_id=op_id, code=E_OFFLINE,
@@ -565,18 +704,33 @@ def _mutate_once(
             )
         store.advance_tip(tip)
 
-        # Idempotency: a previous attempt may have pushed with a lost
-        # reply. Never apply twice under one operation ID.
-        existing = _find_op_commit(store.git_dir, tip, op_id)
+        # Idempotency: a retry under a supplied operation ID, or after an
+        # attempt that may have pushed with a lost reply, must never apply
+        # twice. A freshly generated ID cannot be in the history yet.
+        existing = None
+        if replay:
+            with stages("replay_search"):
+                existing = _find_op_commit(store.git_dir, tip, op_id)
         if existing:
-            return MutationOutcome(ok=True, outcome="applied", op_id=op_id, sha=existing, ack={"duplicate": True})
+            same, recorded = _op_replay(store.git_dir, existing, op, summary, worker)
+            if not same:
+                return MutationOutcome(
+                    ok=False, outcome="error", op_id=op_id, code=E_STATE,
+                    error=f"operation ID {op_id} already recorded a different operation",
+                    recovery=["use a fresh operation ID for a new operation"],
+                )
+            return MutationOutcome(
+                ok=True, outcome="applied", op_id=op_id, sha=existing, ack={**recorded, "duplicate": True},
+            )
 
         try:
-            snapshot, files = store.load(tip)
+            with stages("load"):
+                snapshot, files = store.load(tip)
         except TodoError as exc:
             return MutationOutcome(ok=False, outcome="error", op_id=op_id, code=exc.code or E_STATE, error=str(exc))
         try:
-            ack = apply(snapshot) or {}
+            with stages("apply"):
+                ack = apply(snapshot) or {}
         except TodoError as exc:
             # Precondition failure after re-evaluation: a conflict, not a
             # retryable transport error. Never overwrite the newer state.
@@ -589,7 +743,8 @@ def _mutate_once(
             validate_snapshot(snapshot.index, snapshot.details)
         except TodoError as exc:
             return MutationOutcome(ok=False, outcome="error", op_id=op_id, code=exc.code or E_STATE, error=str(exc))
-        tree = store.write_tree(tip, snapshot, files)
+        with stages("tree"):
+            tree = store.write_tree(tip, snapshot, files)
         if tree == store.tree_of(tip):
             if ack.get("_no_write") is True:
                 # An idempotent retry of an operation that already landed:
@@ -602,11 +757,13 @@ def _mutate_once(
                 ok=False, outcome="error", op_id=op_id, code=E_STATE,
                 error="operation produced no state change",
             )
-        new_sha = store.commit(tree, tip, _commit_message(op, summary, op_id, worker, session))
+        with stages("commit"):
+            new_sha = store.commit(tree, tip, _commit_message(op, summary, op_id, worker, session, ack))
         if progress is not None:
             progress.append("push")
         try:
-            push = store.push(url, new_sha, ref.branch)
+            with stages("push"):
+                push = store.push(url, new_sha, ref.branch)
         except subprocess.TimeoutExpired:
             push = None
         if push is None:
@@ -621,7 +778,8 @@ def _mutate_once(
             )
         if push.returncode == 0:
             try:
-                confirmed = ls_remote_tip(ref)
+                with stages("confirm"):
+                    confirmed = ls_remote_tip(ref)
             except TodoError:
                 confirmed = "unreachable"
             if confirmed == new_sha:
@@ -721,7 +879,7 @@ def _offline_cached(store: Store, ref: StateRef, cache_dir: str | Path) -> ReadO
                 rev = store.tip()
                 if rev is not None:
                     return ReadOutcome(snapshot=store.load(rev)[0], rev=rev, stale=True)
-    except StoreError:
+    except (StoreError, StoreBusy):
         pass
     # Caches written before the object store keep revs/<last> until
     # `tractable cache prune` removes them; serve that until the store has a
@@ -761,7 +919,7 @@ def cached_revision(ref: StateRef, cache_dir: str | Path) -> str | None:
                 rev = store.tip()
             if rev is not None:
                 return rev
-    except StoreError:
+    except (StoreError, StoreBusy):
         pass
     return _legacy_cached_rev(_ns_dir(cache_dir, ref))
 
