@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-18
+
 ### Changed
 
 - Every MCP write acknowledgement carries `operation_id`: the caller's id when
