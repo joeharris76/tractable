@@ -73,7 +73,7 @@ Every write accepts `operation_id` (32 hex chars). Generate one per
 write before calling. If a call times out or returns `E_UNKNOWN`, repeat it
 unchanged with the same `operation_id`: a landed write returns its original
 acknowledgement (`duplicate`) and is never applied twice. A new write needs a
-new id.
+new id. Omitted, one is generated and returned in the acknowledgement.
 
 ## Session history
 

@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Every MCP write acknowledgement carries `operation_id`: the caller's id when
+  one was passed, otherwise the id the server generated. The generated id is
+  already in the commit trailer and the task's `sessions` log, so a write whose
+  reply was lost can be found with `show_item` or
+  `tractable recover --op-id`. `get_instructions` says an omitted id is
+  generated and returned.
+
 ## [1.2.0] - 2026-11-17
 
 ### Added
