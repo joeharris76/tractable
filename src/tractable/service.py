@@ -691,7 +691,10 @@ class TrackerService:
         except TodoError as exc:
             return err(exc.code or E_STATE, str(exc), recovery=exc.recovery)
         if result.ok:
-            ack = {"id": result.ack.get("id"), "rev": result.sha, **{k: v for k, v in result.ack.items() if k not in ("id", "_no_write")}}
+            ack = {
+                "id": result.ack.get("id"), "rev": result.sha, "operation_id": op_id,
+                **{k: v for k, v in result.ack.items() if k not in ("id", "_no_write")},
+            }
             # Section continuations minted pre-commit learn their revision
             # here, at any nesting depth (take nests needs continuations).
             def stamp(node: Any) -> None:

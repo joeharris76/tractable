@@ -216,3 +216,33 @@ def test_a_slow_mutation_logs_at_warning(
     with caplog.at_level(logging.INFO, logger="tractable.git"):
         assert svc.create_item("t1", "One")["ok"]
     assert any(r.levelno == logging.WARNING and "mutate op=create" in r.getMessage() for r in caplog.records)
+
+
+def test_write_without_operation_id_returns_a_reconcilable_generated_id(tmp_path: Path) -> None:
+    ids: dict[str, str] = {}
+
+    async def scenario(call) -> None:
+        created = await call("create_item", id="t1", title="One")
+        assert created["ok"], created
+        generated = created["data"]["operation_id"]
+        assert len(generated) == 32 and int(generated, 16) >= 0
+        ids["created"] = generated
+        shown = await call("show_item", id="t1")
+        assert generated in json.dumps(shown["data"]["sessions"])
+        again = await call("create_item", id="t1", title="One", operation_id=generated)
+        assert again["ok"] and again["data"]["duplicate"] is True
+        assert again["data"]["operation_id"] == generated
+        explicit = await call("update_item", id="t1", title="Two", operation_id=OP_A)
+        assert explicit["data"]["operation_id"] == OP_A
+        other = await call("update_item", id="t1", title="Three")
+        assert other["data"]["operation_id"] != generated
+
+    _over_mcp(tmp_path, scenario)
+    ref = StateRef(remote=str(_remote(tmp_path)), branch="todo-state")
+    found = git_backend.reconcile(ref, ids["created"], cache_dir=tmp_path / "cache2")
+    assert found.state == "applied"
+    log = subprocess.run(
+        ["git", "-C", str(_remote(tmp_path)), "log", "todo-state", "--format=%B"],
+        check=True, capture_output=True, text=True,
+    ).stdout
+    assert f"Todo-Ack: {ids['created']}" in log or ids["created"] in log
