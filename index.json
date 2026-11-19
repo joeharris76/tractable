@@ -248,15 +248,10 @@
       "title": "Per-draft error isolation in finding sync; template passes its own validator"
     },
     "finish-records-closing-note": {
-      "claim": {
-        "expires_at": "2026-11-20T14:52:42Z",
-        "generation": "0914df205462491e93f2d05ba6b1946c",
-        "renewals": 0,
-        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533"
-      },
+      "claim": null,
       "needs": [],
       "priority": "low",
-      "status": "active",
+      "status": "done",
       "title": "Let finish record a closing note in the same commit as the status change"
     },
     "finish-records-closing-note-deferral-1": {
