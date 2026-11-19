@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-11-19
+
 ### Added
 
 - `finish` accepts an optional `closing_note` (4,000 characters at most, newlines
