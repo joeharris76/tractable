@@ -624,10 +624,15 @@
       "title": "Let a client reconcile a tracker write that outlived its request timeout"
     },
     "offline-reads-wait-full-ls-remote-timeout": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-20T14:53:06Z",
+        "generation": "720cbdf4ba384634b7dc6abc594ebf9f",
+        "renewals": 0,
+        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533"
+      },
       "needs": [],
       "priority": "low",
-      "status": "open",
+      "status": "active",
       "title": "Offline reads wait the full 60-second ls-remote timeout on every call when the remote hangs"
     },
     "opt-audit-head-check-on-open": {
