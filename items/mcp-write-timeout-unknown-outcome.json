@@ -5,6 +5,7 @@
     "Retrying the same context_append with the same operation id does not append twice, covered by a test.",
     "The timeout guidance in the todo skill or docs names how to reconcile."
   ],
+  "context": "Verified fixed on main 92557b4 (1.3.0). Choice recorded: (a) reconcile by operation id, plus bounded lock wait. Measurements: docs/measurements.md 'Write latency under host load' (2026-11-17; take and finish p50/p95 before and after, stage breakdown, cause = local CPU over the whole tracker plus lock contention with background repack). Evidence per acceptance line: (1) measurements.md and 1.2.0 stage-time logging on the tractable.git logger (commit 51538b2, PR #77). (2) 1.3.0 e717951 (PR #79): every write ack carries operation_id; a replay returns the original ack with duplicate=true; the id is in the Todo-Op-Id trailer and the task sessions log, so show_item or `tractable recover --op-id` reconciles. (3) tests/test_operation_replay.py::test_replayed_context_append_appends_once, test_replayed_finish_is_not_applied_twice, plus take replay. (4) get_instructions text and README say to retry the same call with the same operation_id. Guardrails kept: no claim-semantics change, lock wait capped at 20 s with E_STATE and nothing changed, no server-side silent retry.",
   "description": "Product defect reported from BenchBox, where it is tracked as tractable-mcp-write-timeout-unknown-outcome-20261113 and tractable-mcp-request-timeouts-20261112; both say the fix belongs in tractable.\n\nOn 2026-11-12, against the BenchBox state store, several calls failed at the MCP client with \"Request timeout after 30000ms ... the request outcome is unknown\":\n- a finish (the item turned out done) and a take (the item stayed open; a retry took it);\n- under heavy host load (load average 8-37, swap above 90%), a list_items and two update_item context_append writes, both of which had landed.\nThe client cannot tell whether a write applied. A blind retry of finish is refused or double-applies; a blind take retry can hit E_MULTIPLE_CLAIMS; a retried context_append appends twice. Agents must read state back by hand. A third BenchBox report misattributed a scripted 30-second deadline to the MCP timeout and was dropped as a duplicate.\n\nDecision (owner, 2026-11-14): file in tractable and do not implement in this round; the cause is not yet investigated.\n\nDecision gate for the implementer: first measure where the time goes (state-branch fetch, push, publication retry, lock contention or host load) from server logs. Then choose between (a) a timed-out write being reconcilable by operation id, with idempotent retries of the same operation id, and (b) making writes finish within the client timeout. Record the choice and the measurements here.\n\nGuardrails:\n- No change to claim semantics or one-winner publication.\n- No silent retries inside the server that could double-apply a write.\n- Do not raise the client timeout so far that a hung remote blocks a session indefinitely.",
   "links": [
     "BenchBox: tractable-mcp-write-timeout-unknown-outcome-20261113",
@@ -26,6 +27,14 @@
       "generation": "e2d9a3a0027e4ebc99f96e84caea9603",
       "op": "take",
       "op_id": "2e288560135d4f7bb5f8934c43e08a27",
+      "session_id": "03f3acf163784ba18ba1ec2bd7b690ff"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533",
+      "at": "2026-11-19T13:58:13Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "bcb5952e779d4efda88b11ae58b694db",
       "session_id": "03f3acf163784ba18ba1ec2bd7b690ff"
     }
   ]
