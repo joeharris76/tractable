@@ -5,7 +5,7 @@
     "show_item and todo-db show return the note; list_items rows are unchanged",
     "The tool schema snapshot, instructions, README and CHANGELOG are updated; the catalog todo skill tells agents to pass the note to finish instead of a separate context_append once a release carries it"
   ],
-  "context": "Found 2026-10-31 by the review of the BenchBox drop-reason item and again while closing items on 2026-11-01.",
+  "context": "Found 2026-10-31 by the review of the BenchBox drop-reason item and again while closing items on 2026-11-01.\n\nFixed in 1.3.1. PR #81 (merge a84cbe1, commit 5cb2871); release PR #82 (merge b4ebe03), tag v1.3.1, PyPI publish run https://github.com/joeharris76/tractable/actions/runs/44541687536 (distribution-verify success). Behaviour: finish(closing_note=...) stores detail.closing_note in the same state commit as status done; limit 4000 chars, drop-reason control-character rules; show_item returns it (including the slim fallback); list_items rows unchanged; tool snapshot, instructions, mcp-clients.md and CHANGELOG updated. Tests: tests/test_service.py::test_finish_with_closing_note_is_one_state_commit (asserts exactly one commit), test_finish_refuses_invalid_closing_note_and_leaves_state_untouched, test_finish_retry_after_competing_push_stores_note_once, test_show_item_returns_closing_note_in_slim_fallback; CI green (test 3.10, 3.13, release-gate1). Remaining acceptance line (catalog todo skill text lives in skill-sync-skills, outside this repo) is carried by a promoted follow-up item.",
   "description": "finish(id, generation, final_evidence) accepts only prepared-batch final evidence, so agents record what closed an item with a separate update_item context_append and then finish: two state commits per close. Every close in the BenchBox and benchbox-site trackers on 2026-10-31 and 2026-11-01 followed that pattern (about 15 items), and the site-split-99-closeout close did too (af92ea1bea then b236b81d18 in the BenchBox tracker). The failure modes match the ones drop had before 0.12.0: if the finish fails after the note, the item stays open with a note saying it closed; a re-run duplicates the note; nothing ties the note to the close. Closing notes in practice run 500-1,500 characters across lines.",
   "links": [
     "src/todo_db/mcp/tools.py",
@@ -28,6 +28,14 @@
       "generation": "0914df205462491e93f2d05ba6b1946c",
       "op": "take",
       "op_id": "74c68c7ec3f6448a8aede40a531eaf21",
+      "session_id": "03f3acf163784ba18ba1ec2bd7b690ff"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533",
+      "at": "2026-11-19T14:52:51Z",
+      "client": "omp-coding-agent",
+      "op": "update",
+      "op_id": "d7c9b5baa61d4d53a15f8a2f1cf1e80c",
       "session_id": "03f3acf163784ba18ba1ec2bd7b690ff"
     }
   ]
