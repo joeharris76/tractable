@@ -12,7 +12,9 @@
       "from_item": "finish-records-closing-note",
       "id": 1,
       "reason": "closing_note shipped in tractable 1.3.1; the catalog todo skill still says to context_append before finish. The skill lives in skill-sync-skills, outside this repository.",
-      "resolution": "open",
+      "resolution": "promoted",
+      "resolved_at": "2026-11-19T14:53:00Z",
+      "resolved_item": "finish-records-closing-note-deferral-1",
       "summary": "Teach the todo skill (skill-sync-skills) to pass closing_note to finish"
     }
   ],
@@ -54,6 +56,14 @@
       "client": "omp-coding-agent",
       "op": "defer",
       "op_id": "4d729592b9b149fb875ee4499f1e2a83",
+      "session_id": "03f3acf163784ba18ba1ec2bd7b690ff"
+    },
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533",
+      "at": "2026-11-19T14:53:00Z",
+      "client": "omp-coding-agent",
+      "op": "promote",
+      "op_id": "d3d14e2275884a1eab7ea896bcea1ff4",
       "session_id": "03f3acf163784ba18ba1ec2bd7b690ff"
     }
   ]

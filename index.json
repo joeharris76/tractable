@@ -259,6 +259,13 @@
       "status": "active",
       "title": "Let finish record a closing note in the same commit as the status change"
     },
+    "finish-records-closing-note-deferral-1": {
+      "claim": null,
+      "needs": [],
+      "priority": "low",
+      "status": "open",
+      "title": "Teach the todo skill to pass closing_note to finish"
+    },
     "fix-cli-parser-wrapper-constant": {
       "claim": null,
       "needs": [],

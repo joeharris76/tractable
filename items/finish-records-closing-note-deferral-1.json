@@ -1,0 +1,13 @@
+{
+  "description": "Promoted from deferral 1 on finish-records-closing-note: closing_note shipped in tractable 1.3.1; the catalog todo skill still says to context_append before finish. The skill lives in skill-sync-skills, outside this repository.",
+  "sessions": [
+    {
+      "actor": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533",
+      "at": "2026-11-19T14:53:00Z",
+      "client": "omp-coding-agent",
+      "op": "promote",
+      "op_id": "d3d14e2275884a1eab7ea896bcea1ff4",
+      "session_id": "03f3acf163784ba18ba1ec2bd7b690ff"
+    }
+  ]
+}
