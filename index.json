@@ -276,10 +276,15 @@
       "title": "Return coded errors when a local git subprocess times out"
     },
     "git-version-hook-isolation-init": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-20T14:53:18Z",
+        "generation": "a2e677baf2f942e2ae2718f1f7f97d07",
+        "renewals": 0,
+        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533"
+      },
       "needs": [],
       "priority": "low",
-      "status": "open",
+      "status": "active",
       "title": "Isolate store init from global hooks on Git versions below 2.31"
     },
     "global-index-install-and-upgrade": {
