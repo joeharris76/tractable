@@ -183,3 +183,27 @@ def test_show_item_from_cache_is_marked_stale(tmp_path: Path) -> None:
     _away(remote)
     shown = svc.show_item("t1")["data"]
     assert shown["stale"] is True and shown["cached_rev"] == cached and "rev" not in shown
+
+
+def test_cached_read_against_a_hanging_remote_probes_briefly_then_recovers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    svc, _, _ = _setup(tmp_path)
+    _populate(svc)
+    seen = _hanging_probe(monkeypatch)
+    out = svc.list_items()
+    assert out["ok"] and out["data"].get("stale") is True
+    assert seen == [git_backend.READ_PROBE_TIMEOUT_S]
+    assert git_backend.READ_PROBE_TIMEOUT_S < git_backend.GIT_TIMEOUT_S
+    monkeypatch.undo()
+    assert "stale" not in svc.list_items()["data"]
+
+
+def test_read_without_a_cache_keeps_the_full_probe_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    svc, _, _ = _setup(tmp_path)
+    seen = _hanging_probe(monkeypatch)
+    out = svc.list_items()
+    assert not out["ok"]
+    assert seen == [git_backend.GIT_TIMEOUT_S]

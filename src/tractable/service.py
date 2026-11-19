@@ -382,6 +382,8 @@ class TrackerService:
                     }
             if entry["status"] == "dropped" and detail.get("drop_reason") is not None:
                 data["drop_reason"] = detail["drop_reason"]
+            if entry["status"] == "done" and detail.get("closing_note") is not None:
+                data["closing_note"] = detail["closing_note"]
             if detail.get("batch") is not None:
                 data["batch"] = detail["batch"]
             if detail.get("prepared") is not None:
@@ -428,6 +430,8 @@ class TrackerService:
             _stamp_rev(slim, outcome.rev, outcome.stale)
             if entry["status"] == "dropped" and detail.get("drop_reason") is not None:
                 slim["drop_reason"] = detail["drop_reason"]
+            if entry["status"] == "done" and detail.get("closing_note") is not None:
+                slim["closing_note"] = detail["closing_note"]
             if _fits(ok(slim)):
                 return ok(slim)
             return err(
@@ -1653,7 +1657,13 @@ class TrackerService:
 
         return self._mutate("prepare", f"{worker} prepares {item_id}", apply)
 
-    def finish(self, item_id: str, generation: str, final_evidence: dict[str, Any] | None = None) -> dict[str, Any]:
+    def finish(
+        self,
+        item_id: str,
+        generation: str,
+        final_evidence: dict[str, Any] | None = None,
+        closing_note: str | None = None,
+    ) -> dict[str, Any]:
         worker = self.worker
 
         def apply(snap: S.Snapshot, op_id: str) -> dict[str, Any]:
@@ -1681,7 +1691,7 @@ class TrackerService:
             checked = final_evidence
             if checked is not None:
                 checked = self._validate_final_checkout(snap, item_id, checked)
-            out = S.op_finish(snap, item_id, worker, generation, checked)
+            out = S.op_finish(snap, item_id, worker, generation, checked, closing_note)
             self._record_session(snap, item_id, "finish", op_id, generation=generation)
             return out
 

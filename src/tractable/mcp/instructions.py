@@ -45,7 +45,9 @@ acknowledgement; lists return brief rows (id/title/priority/status).
 9. `release` -- hand the claim back (needs the generation from take).
 10. `finish` -- close the task (needs the generation from take). Prepared
    tasks additionally require current combined-tree evidence covering every
-   prepared member and the registered final PR.
+   prepared member and the registered final PR. Pass what closed it as
+   `closing_note` (4000 characters at most): it is stored in the same commit
+   and returned by `show_item`; do not add a separate `context_append`.
    `drop` abandons a task and requires a `reason` (stored as `drop_reason` in
    the same commit; no separate note needed); a live claim needs its generation.
 11. `renew` -- extend a long-running claim (same generation, no

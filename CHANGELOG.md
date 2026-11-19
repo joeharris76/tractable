@@ -6,6 +6,25 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `finish` accepts an optional `closing_note` (4,000 characters at most, newlines
+  allowed, the same control-character rules as a drop reason). It is stored in
+  the same commit as the status change, so closing an item no longer takes a
+  `context_append` followed by a `finish`, and a retry after a competing push
+  stores it once. `show_item` returns it for done items; `list_items` rows are
+  unchanged. Older clients keep the key when they rewrite the item.
+
+### Changed
+
+- A read against a remote that hangs waits 10 seconds, not 60, for the tip
+  check before it serves the cached revision (marked `stale` with `cached_rev`).
+  Only reads with a cache use the short probe; the next read after the remote
+  recovers is fresh. Writes keep their timeouts.
+- git 2.31 or newer is required (was 2.28). Store creation relies on
+  `GIT_CONFIG_COUNT` to keep a global `core.hooksPath` hook from running during
+  `git init`, which older versions ignore; a store is no longer created on them.
+
 ## [1.3.0] - 2026-11-18
 
 ### Changed

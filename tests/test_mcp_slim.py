@@ -422,6 +422,8 @@ def test_startup_schema_cost_is_small(tmp_path: Path) -> None:
             # wording: 5,907 -> 5,946.
             # The optional operation_id argument on all 17 write tools and
             # its guidance paragraph: 5,946 -> 6,387.
-            assert tokens <= 6400, tokens
+            # The optional closing_note argument on finish and its guidance
+            # (measured: 6,387 -> 6,506).
+            assert tokens <= 6510, tokens
 
     anyio.run(go)

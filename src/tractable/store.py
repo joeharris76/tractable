@@ -152,6 +152,7 @@ UPDATE_STATUSES = frozenset({"open", "blocked"})
 #: summary does, quoted separately).
 MAX_DEFERRAL_SUMMARY_LEN = 200
 MAX_DEFERRAL_REASON_LEN = 2000
+MAX_CLOSING_NOTE_LEN = 4000
 
 #: Deferral resolutions. `open` is the only actionable state; `promoted`
 #: and `dismissed` are terminal and record how the deferral left the queue.
@@ -487,14 +488,15 @@ def validate_deferral_summary(summary: str) -> str:
     return cleaned
 
 
-def _validate_reason_text(reason: str, label: str) -> str:
+def _validate_reason_text(reason: str, label: str, limit: int | None = None) -> str:
     """Shared rules for multi-line reasons: bounded, never empty, no control
     characters other than newline/tab, no Unicode line separators."""
     if not isinstance(reason, str) or not reason.strip():
         raise TodoError(f"{label} must be a non-empty string", code=E_STATE)
     cleaned = reason.strip()
-    if len(cleaned) > MAX_DEFERRAL_REASON_LEN:
-        raise TodoError(f"{label} exceeds {MAX_DEFERRAL_REASON_LEN} chars", code=E_STATE)
+    limit = MAX_DEFERRAL_REASON_LEN if limit is None else limit
+    if len(cleaned) > limit:
+        raise TodoError(f"{label} exceeds {limit} chars", code=E_STATE)
     if any(char in FORBIDDEN_BREAKS for char in cleaned):
         raise TodoError(f"{label} must not contain Unicode line separators", code=E_STATE)
     if any(ord(char) < 32 and char not in ("\n", "\t") for char in cleaned):
@@ -515,6 +517,12 @@ def validate_drop_reason(reason: str) -> str:
     """Validate the reason recorded when a task is dropped; same rules as a
     deferral reason."""
     return _validate_reason_text(reason, "drop reason")
+
+
+def validate_closing_note(note: str) -> str:
+    """Validate the note recorded when a task is finished; same character rules
+    as a drop reason with a larger bound."""
+    return _validate_reason_text(note, "closing note", MAX_CLOSING_NOTE_LEN)
 
 
 def empty_index() -> dict[str, Any]:
@@ -1201,6 +1209,12 @@ def validate_snapshot(index: Any, details: dict[str, Any]) -> dict[str, Any]:
             value = detail["drop_reason"]
             if not isinstance(value, str) or not value.strip():
                 raise TodoError(f"detail for {item_id!r}: 'drop_reason' must be a non-empty string", code=E_STATE)
+        if "closing_note" in detail:
+            # Additive like drop_reason: absence stays valid for items
+            # finished before notes were recorded; older readers keep the key.
+            value = detail["closing_note"]
+            if not isinstance(value, str) or not value.strip():
+                raise TodoError(f"detail for {item_id!r}: 'closing_note' must be a non-empty string", code=E_STATE)
         if "sessions" in detail:
             # Additive session history: absence stays valid for
             # pre-history items, presence must validate.
@@ -2706,9 +2720,14 @@ def op_finish(
     worker: str,
     generation: str,
     final_evidence: dict[str, Any] | None = None,
+    closing_note: str | None = None,
 ) -> dict[str, Any]:
-    """Close a task, requiring final-tree evidence for prepared work."""
+    """Close a task, requiring final-tree evidence for prepared work. An
+    optional closing note lands in the detail in the same write; it is
+    validated before any mutation."""
     worker = validate_worker(worker)
+    if closing_note is not None:
+        closing_note = validate_closing_note(closing_note)
     entry = _require_entry(snapshot, item_id)
     claim = entry.get("claim")
     if (
@@ -2748,6 +2767,8 @@ def op_finish(
         )
     entry["claim"] = None
     entry["status"] = "done"
+    if closing_note is not None:
+        detail["closing_note"] = closing_note
     if isinstance(batch, dict) and all(
         snapshot.index["items"].get(member, {}).get("status") == "done" for member in batch["members"]
     ):

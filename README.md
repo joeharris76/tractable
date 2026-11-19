@@ -24,7 +24,7 @@ see [Migration from 0.6.x](#migration-from-06x) and the
 
 - Python 3.10 or newer.
 - [uv](https://docs.astral.sh/uv/) (or `pipx`/`pip`) to install.
-- **git** 2.28 or newer — task state is published through Git; the `git`
+- **git** 2.31 or newer — task state is published through Git; the `git`
   CLI must be installed and the state remote reachable.
 
 ## Install

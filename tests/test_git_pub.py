@@ -520,7 +520,7 @@ def test_read_reuses_tip_snapshot_without_network(tmp_path: Path, monkeypatch) -
 
     # Same tip, dead transport past the tip check: the stored snapshot
     # must serve from local objects without any fetch.
-    monkeypatch.setattr(git_backend, "ls_remote_tip", lambda r: first.rev)
+    monkeypatch.setattr(git_backend, "ls_remote_tip", lambda r, timeout=0: first.rev)
     real_git = git_backend._git
 
     def no_network(args: list[str], cwd=None, timeout=git_backend.GIT_TIMEOUT_S, **kw):

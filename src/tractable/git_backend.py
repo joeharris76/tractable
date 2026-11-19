@@ -92,6 +92,9 @@ def _check_op_id(op_id: str) -> str:
 STATE_BRANCH_FALLBACK = "todo-state"
 DEFAULT_MAX_RETRIES = 5
 GIT_TIMEOUT_S = 60
+# A read that has a cache to fall back on probes the remote for this long: a
+# hanging network then costs seconds, not GIT_TIMEOUT_S, before stale data.
+READ_PROBE_TIMEOUT_S = 10
 FIRST_FETCH_TIMEOUT_S = 300
 OP_ID_TRAILER = "Todo-Op-Id"
 SESSION_TRAILER = "Todo-Session"
@@ -938,7 +941,9 @@ def read(ref: StateRef, cache_dir: str | Path) -> ReadOutcome:
     """
     store = _store(ref, cache_dir)
     try:
-        tip = ls_remote_tip(ref)
+        tip = ls_remote_tip(
+            ref, timeout=READ_PROBE_TIMEOUT_S if store.exists() else GIT_TIMEOUT_S,
+        )
     except TodoError:
         return _offline_cached(store, ref, cache_dir)
     if tip is None:
