@@ -380,7 +380,7 @@
   },
   {
     "name": "finish",
-    "description": "Close a task. Prepared tasks additionally require current final-tree evidence, inline as final_evidence or as final_evidence_path, an absolute path to a JSON file.",
+    "description": "Close a task. Prepared tasks additionally require current final-tree evidence, inline as final_evidence or as final_evidence_path, an absolute path to a JSON file. closing_note (optional, 4000 characters at most, newlines allowed) is stored with the status change in one commit and returned by show_item.",
     "inputSchema": {
       "properties": {
         "id": {
@@ -415,6 +415,18 @@
           ],
           "default": null,
           "title": "Final Evidence Path"
+        },
+        "closing_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Closing Note"
         },
         "operation_id": {
           "default": "",

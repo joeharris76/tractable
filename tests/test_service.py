@@ -628,3 +628,82 @@ def test_show_item_returns_drop_reason_including_slim_fallback(tmp_path: Path, m
     slim = svc.show_item("d1")
     assert slim["ok"] and "continuation" in slim["data"], slim
     assert slim["data"]["drop_reason"] == reason
+
+
+def _claim(svc: TrackerService, item_id: str) -> str:
+    return svc.take(item_id)["data"]["claim"]["generation"]
+
+
+def test_finish_refuses_invalid_closing_note_and_leaves_state_untouched(tmp_path: Path) -> None:
+    svc, ref = _session_svc(tmp_path)
+    assert svc.create_item("f1", "Finishable")["ok"]
+    generation = _claim(svc, "f1")
+    commits = _branch_commits(ref, tmp_path)
+    for bad in ("", "   ", "x" * 4001, "bad\x00", "a\u2028b"):
+        out = svc.finish("f1", generation, closing_note=bad)
+        assert not out["ok"] and out["code"] == "E_STATE", (bad, out)
+    assert _branch_commits(ref, tmp_path) == commits
+    assert svc.show_item("f1")["data"]["status"] == "active"
+
+
+def test_finish_with_closing_note_is_one_state_commit(tmp_path: Path) -> None:
+    svc, ref = _session_svc(tmp_path)
+    assert svc.create_item("f1", "Finishable")["ok"]
+    assert svc.create_item("f2", "Plain")["ok"]
+    generation = _claim(svc, "f1")
+    before = _branch_commits(ref, tmp_path)
+    note = "Fixed in PR 1.\n\tMerged as abc." + "x" * 3900
+    out = svc.finish("f1", generation, closing_note="  " + note + "\n")
+    assert out["ok"] and out["data"]["status"] == "done", out
+    assert _branch_commits(ref, tmp_path) == before + 1
+    snap = git_backend.read(ref, tmp_path / "cache").snapshot
+    assert snap.details["f1"]["closing_note"] == note
+    shown = svc.show_item("f1")
+    assert shown["data"]["closing_note"] == note
+    assert "closing_note" not in json.dumps(svc.list_items(status="done"))
+    assert svc.finish("f2", _claim(svc, "f2"))["ok"]
+    assert "closing_note" not in svc.show_item("f2")["data"]
+
+
+def test_finish_retry_after_competing_push_stores_note_once(tmp_path: Path, monkeypatch) -> None:
+    svc, ref = _session_svc(tmp_path)
+    rival = TrackerService(ref=ref, cache_dir=tmp_path / "rival-cache", worker="rival", session_id="session-b")
+    assert svc.create_item("f1", "Finishable")["ok"]
+    generation = _claim(svc, "f1")
+    before = _branch_commits(ref, tmp_path)
+    real_mutate = git_backend.mutate
+    attempts: list[int] = []
+
+    def racing_mutate(ref, *, apply, **kwargs):
+        if kwargs.get("op") != "finish":
+            return real_mutate(ref, apply=apply, **kwargs)
+
+        def wrapped(snapshot):
+            attempts.append(1)
+            if len(attempts) == 1:
+                assert rival.create_item("other", "Other")["ok"]
+            return apply(snapshot)
+
+        return real_mutate(ref, apply=wrapped, **kwargs)
+
+    monkeypatch.setattr(git_backend, "mutate", racing_mutate)
+    out = svc.finish("f1", generation, closing_note="done")
+    assert out["ok"], out
+    assert len(attempts) == 2
+    assert _branch_commits(ref, tmp_path) == before + 2
+    snap = git_backend.read(ref, tmp_path / "cache").snapshot
+    assert snap.details["f1"]["closing_note"] == "done"
+    assert [entry["op"] for entry in snap.details["f1"]["sessions"]].count("finish") == 1
+
+
+def test_show_item_returns_closing_note_in_slim_fallback(tmp_path: Path, monkeypatch) -> None:
+    import tractable.service as svcmod
+
+    svc = _svc(tmp_path)
+    assert svc.create_item("f1", "Finishable", description="D" * 5000)["ok"]
+    generation = _claim(svc, "f1")
+    assert svc.finish("f1", generation, closing_note="Closed.\nWith evidence.")["ok"]
+    monkeypatch.setattr(svcmod, "MAX_BYTES", 3000)
+    slim = svc.show_item("f1")
+    assert slim["ok"] and "continuation" in slim["data"], slim
+    assert slim["data"]["closing_note"] == "Closed.\nWith evidence."

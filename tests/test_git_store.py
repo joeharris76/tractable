@@ -372,7 +372,7 @@ def test_offline_read_falls_back_to_a_legacy_cached_revision(tmp_path: Path, mon
     S.save_snapshot(legacy / "revs" / ("c" * 40), snap)
     (legacy / "last").write_text("c" * 40 + "\n")
 
-    def offline(r):
+    def offline(r, timeout=0):
         raise TodoError("simulated outage", code="E_OFFLINE")
 
     monkeypatch.setattr(git_backend, "ls_remote_tip", offline)
@@ -828,3 +828,11 @@ def test_dry_run_reports_busy_namespaces_without_creating_locks(tmp_path: Path) 
         os.close(fd)
     assert report["skipped_busy"] == [str(busy)]
     assert not (idle / git_store.LOCK_NAME).exists()
+
+
+def test_store_creation_refuses_git_below_the_minimum(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(git_store, "git_version", lambda: (2, 30, 9))
+    store = git_store.Store(tmp_path / "ns", git_store.run_git)
+    with pytest.raises(git_store.StoreError, match=r"git 2\.31 or newer is required; found 2\.30\.9"):
+        store.open()
+    assert git_store.MIN_GIT_VERSION == (2, 31)

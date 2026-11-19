@@ -253,7 +253,7 @@ Then drive the workflow through the client:
 2. `take` — claim a task; keep the returned `generation`.
 3. `show_item` — read needs, readiness, and sections.
 4. `renew` — extend a long-running claim.
-5. `finish` — close the task.
+5. `finish` — close the task; pass `closing_note` to record what closed it in the same commit.
 
 ## The `todo` skill
 

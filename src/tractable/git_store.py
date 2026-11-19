@@ -58,7 +58,7 @@ MAINTENANCE_RETRY_S = 60
 # only leaves an operation of unknown outcome.
 LOCK_WAIT_S = 20.0
 STALE_STAGING_S = 3600
-MIN_GIT_VERSION = (2, 28)
+MIN_GIT_VERSION = (2, 31)
 PRUNE_EXPIRE = "1.hour.ago"
 STALE_INCOMING_S = 3600
 MAINTENANCE_ENV = "TRACTABLE_STORE_MAINTENANCE"  # background (default) | inline | off
@@ -82,7 +82,8 @@ STORE_CONFIG = (
     ("commit.gpgSign", "false"),
 )
 
-# Settings re-asserted on every command through GIT_CONFIG_COUNT, which
+# Settings re-asserted on every command through GIT_CONFIG_COUNT (git 2.31+,
+# the minimum version, so even `git init` cannot run a global hook), which
 # outranks every config file. Inherited command-level entries stay (they
 # may carry credentials) but come first, so these win for each key. Git
 # drops GIT_CONFIG_COUNT for a local-path remote's receive-pack, so the
@@ -436,12 +437,11 @@ class Store:
         they need reachable through :meth:`advance_tip`.
         """
         ref = INCOMING_PREFIX + uuid4().hex
-        # FETCH_HEAD is never read; skipping it (git 2.29+) also keeps
-        # concurrent fetches from interleaving writes to it.
-        quiet_head = ["--no-write-fetch-head"] if git_version() >= (2, 29) else []
+        # FETCH_HEAD is never read; skipping it also keeps concurrent
+        # fetches from interleaving writes to it.
         try:
             proc = self.git(
-                ["fetch", "--quiet", "--no-tags", *quiet_head, url, f"+refs/heads/{branch}:{ref}"],
+                ["fetch", "--quiet", "--no-tags", "--no-write-fetch-head", url, f"+refs/heads/{branch}:{ref}"],
                 timeout=timeout or self.timeout,
             )
             yield proc, (self.resolve(ref) if proc.returncode == 0 else None)

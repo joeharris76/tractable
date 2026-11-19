@@ -474,7 +474,9 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         name="finish",
         description=(
             "Close a task. Prepared tasks additionally require current final-tree evidence, "
-            "inline as final_evidence or as final_evidence_path, an absolute path to a JSON file."
+            "inline as final_evidence or as final_evidence_path, an absolute path to a JSON file. "
+            "closing_note (optional, 4000 characters at most, newlines allowed) is stored with the "
+            "status change in one commit and returned by show_item."
         ),
     )
     @with_warnings
@@ -483,6 +485,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
         generation: str,
         final_evidence: dict[str, Any] | None = None,
         final_evidence_path: str | None = None,
+        closing_note: str | None = None,
         operation_id: str = "",
         ctx: Context = None,  # type: ignore[assignment]
     ) -> dict[str, Any]:
@@ -496,7 +499,7 @@ def register_tools(server: FastMCP, target: ResolvedTarget, holder: PrincipalHol
             if refusal is not None:
                 return refusal
         svc = _service(target, worker, holder, ctx, operation_id)
-        return await asyncio.to_thread(svc.finish, id, generation, final_evidence)
+        return await asyncio.to_thread(svc.finish, id, generation, final_evidence, closing_note)
 
     @server.tool(
         name="renew",
