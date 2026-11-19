@@ -610,10 +610,15 @@
       "title": "The six hot-path lifecycle tools"
     },
     "mcp-write-timeout-unknown-outcome": {
-      "claim": null,
+      "claim": {
+        "expires_at": "2026-11-20T13:58:06Z",
+        "generation": "e2d9a3a0027e4ebc99f96e84caea9603",
+        "renewals": 0,
+        "worker": "mcp:omp-coding-agent:joe@joe-mac-mini.local:23b217698885fb722648e533"
+      },
       "needs": [],
       "priority": "medium",
-      "status": "open",
+      "status": "active",
       "title": "Let a client reconcile a tracker write that outlived its request timeout"
     },
     "offline-reads-wait-full-ls-remote-timeout": {
