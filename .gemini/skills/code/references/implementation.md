@@ -2,19 +2,24 @@
 
 ## Implement
 
-Follow configured project conventions and checks.
+Apply the configured checks above and `shared-change-framework/SKILL.md`.
+
+When code must classify the meaning of free text (error messages, prose, user
+input) and a keyword or regex list would keep growing, use a typed judgment
+call such as TypeSafe Jev (the `typesafe-ai` skill covers the API), with a
+labelled calibration set kept as a test, a fixed threshold, recorded answers
+so tests run offline, a defined fallback when no key is set, and the user's
+approval before private data leaves the machine. Keep parsers, exact or
+numeric comparisons, and code that must be reproducible or run offline (such
+as benchmark paths) deterministic.
 
 ## Commit
 
-Discover session files, inspect `git status --porcelain` and the diff, verify,
-make a conventional commit, and push through the commit framework. A delegated
-batch member instead stops at the committed, checked change and hands it to its
-leader: see the delegated batch member exception in
-`shared-change-framework/SKILL.md` §4.
+Apply `shared-change-framework/SKILL.md` §4 to the files changed in this
+session.
 
 ## Fix
 
-- Lint: use configured lint/fix commands.
 - Type: run typecheck and add annotations where needed.
 - Runtime: apply the investigation framework's Debug workflow.
 
