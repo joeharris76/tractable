@@ -654,8 +654,10 @@ class TrackerService:
 
         Both acquire a live claim; both must refuse unready batch members
         identically, or takeover would bypass the guards take enforces.
-        Both also honor the not_before hold: a held task is refused
-        rather than taken early.
+        Only the dependencies are checked here: the item's own status and
+        claim belong to op_take and op_takeover, so a live claim can still be
+        re-adopted or taken over. Both also honor the not_before hold: a held
+        task is refused rather than taken early.
         """
         # A held task is refused rather than taken early: taking and
         # finishing it would close the task before its wait ends.
@@ -675,7 +677,9 @@ class TrackerService:
                 dep in implementation_deps and snap.index["items"][dep]["status"] != "done"
                 for dep in entry.get("needs", [])
             )
-            if has_prepared_edge and (not S.is_ready(item_id, snap, now) or not self._batch_runtime_ready(snap, item_id)):
+            if has_prepared_edge and (
+                not S.dependencies_ready(item_id, snap) or not self._batch_runtime_ready(snap, item_id)
+            ):
                 raise TodoError(f"task {item_id!r} is not ready at the current integration head", code=E_NOTHING_READY)
 
     def _mutate(

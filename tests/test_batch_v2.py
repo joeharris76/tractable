@@ -1429,6 +1429,33 @@ def test_recover_over_git_audits_members_and_marks_previous_generation_stale(tmp
     assert rescuer.abort_batch(BATCH, "3" * 32)["ok"]
 
 
+def test_recovered_owner_takes_over_a_claimed_member_with_a_prepared_dependency(tmp_path: Path) -> None:
+    flow = Flow(tmp_path, ["a", "b"], SCOPE, deps={"b": ["a"]})
+    assert flow.land_and_prepare("a", {"a/f2": "two\n"})["ok"]
+    base = flow.rev()
+    flow.take("b")
+    assert flow.leader.take("b")["ok"]
+    rescuer = flow.service("rescuer")
+    assert rescuer.recover_batch_owner(BATCH, "leader", GEN, "3" * 32, "leader died")["ok"]
+    took = rescuer.takeover("b", "leader", "leader session ended with its host")
+    assert took["ok"], took
+    path, accepted = flow.member("b", {"b/f": "b\n"}, base)
+    head = flow.land("b")
+    generation = took["data"]["claim"]["generation"]
+    assert flow.prepare("b", path, accepted, base, head, svc=rescuer, generation=generation)["ok"]
+
+
+def test_takeover_of_a_member_whose_dependency_receipt_is_missing_is_refused(tmp_path: Path) -> None:
+    flow = Flow(tmp_path, ["a", "b"], SCOPE, deps={"b": ["a"]})
+    assert flow.land_and_prepare("a", {"a/f2": "two\n"})["ok"]
+    flow.take("b")
+    rescuer = flow.service("rescuer")
+    assert rescuer.recover_batch_owner(BATCH, "leader", GEN, "3" * 32, "leader died")["ok"]
+    assert rescuer.update_item("a", title="A changed")["ok"]
+    refused = rescuer.takeover("b", "leader", "leader session ended with its host")
+    assert not refused["ok"] and refused["code"] == "E_NOTHING_READY", refused
+
+
 def test_recover_over_git_with_relocation_updates_integration_worktree(tmp_path: Path) -> None:
     flow = Flow(tmp_path, ["a", "b"], SCOPE)
     prep_a = flow.land_and_prepare("a", {"a/f2": "two\n"})
