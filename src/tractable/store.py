@@ -1426,6 +1426,19 @@ def is_ready(item_id: str, snapshot: Snapshot, now: datetime | None = None) -> b
         return False
     if waiting_until(item_id, snapshot, now) is not None:
         return False
+    return dependencies_ready(item_id, snapshot)
+
+
+def dependencies_ready(item_id: str, snapshot: Snapshot) -> bool:
+    """Whether every need of *item_id* is done or a valid prepared same-batch receipt.
+
+    Ignores the item's own status, claim and hold, so take and takeover can
+    gate on dependencies while the claim checks stay with op_take and
+    op_takeover.
+    """
+    entry = snapshot.index["items"].get(item_id)
+    if entry is None:
+        return False
     detail = snapshot.details.get(item_id, {})
     batch = detail.get("batch")
     implementation_deps = set(batch.get("implementation_dependencies", [])) if isinstance(batch, dict) else set()

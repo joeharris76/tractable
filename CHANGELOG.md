@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `takeover` and same-worker re-adoption through `take` now work on a batch
+  member whose implementation dependency is a prepared member. Their readiness
+  check required the member to be open with no live claim, which a claimed
+  member never is, so a recovered batch owner could not take over the claim a
+  dead leader held and could not prepare the member. The check now looks only
+  at the dependencies; the claim rules stay with `take` and `takeover`.
+
 ## [1.3.1] - 2026-11-19
 
 ### Added
