@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-11-25
+
 ### Fixed
 
 - `takeover` and same-worker re-adoption through `take` now work on a batch
